@@ -25,9 +25,8 @@ PanelWindow {
         right: 28
     }
 
-    implicitWidth: 360
-    // Dynamic height: fits whichever active tab is shown, no wasted empty space
-    implicitHeight: Math.min(640, mainCard.implicitHeight)
+    width: 360
+    height: 520 // FIXED HEIGHT to completely bypass Wayland dynamic input region desync bugs!
 
     color: "transparent"
 
@@ -280,10 +279,8 @@ PanelWindow {
     // Outer Shell Card
     Rectangle {
         id: mainCard
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        implicitHeight: cardLayout.implicitHeight + 28
+        anchors.fill: parent
+        
 
         radius: 20
         color: root.colSurface
@@ -292,9 +289,7 @@ PanelWindow {
 
         ColumnLayout {
             id: cardLayout
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
+            anchors.fill: parent
             anchors.margins: 14
             spacing: 12
 
@@ -427,7 +422,7 @@ PanelWindow {
             Item {
                 id: slidingContainer
                 Layout.fillWidth: true
-                implicitHeight: (root.currentMainTab === "tasks" ? tasksView.implicitHeight : agendaView.implicitHeight)
+                Layout.fillHeight: true // Fill remaining space!
                 clip: true
 
                 // ------------------------------------------
@@ -496,7 +491,8 @@ PanelWindow {
                     ListView {
                         id: taskListView
                         Layout.fillWidth: true
-                        implicitHeight: Math.min(320, contentHeight)
+                        Layout.fillHeight: true // Fill the remaining space!
+                        // Removed dynamic implicitHeight
                         clip: true
                         add: Transition {
                             ParallelAnimation {
