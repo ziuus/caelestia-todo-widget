@@ -99,9 +99,19 @@ PanelWindow {
                             root.lastResetDate = parsed.lastResetDate || curDate
 
                             if (root.lastResetDate !== curDate) {
+                                var newList = []
                                 for (var i = 0; i < root.masterList.length; i++) {
-                                    if (root.masterList[i].type === "daily") root.masterList[i].done = false
+                                    var t = root.masterList[i]
+                                    if (t.type === "daily") {
+                                        t.done = false
+                                        newList.push(t)
+                                    } else {
+                                        if (!t.done) {
+                                            newList.push(t)
+                                        }
+                                    }
                                 }
+                                root.masterList = newList
                                 root.lastResetDate = curDate
                                 root.saveTodos()
                             }
@@ -545,11 +555,23 @@ PanelWindow {
                                     }
                                 }
 
-                                Text {
-                                    visible: model.type === "daily"
-                                    text: "↻"
-                                    font.pixelSize: 12
-                                    color: model.done ? root.colOutline : root.colTertiary
+                                Rectangle {
+                                    width: 20
+                                    height: 20
+                                    radius: 4
+                                    color: "transparent"
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "↻"
+                                        font.pixelSize: 14
+                                        font.bold: true
+                                        color: model.type === "daily" ? root.colTertiary : root.colOutlineVariant
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.toggleRecurring(model.rawIndex)
+                                    }
                                 }
                                 Text {
                                     Layout.fillWidth: true
