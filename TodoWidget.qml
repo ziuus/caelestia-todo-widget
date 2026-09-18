@@ -26,8 +26,7 @@ PanelWindow {
     }
 
     implicitWidth: 360
-    implicitHeight: Math.min(640, mainCard.implicitHeight)
-// Restore dynamic sizing!
+    implicitHeight: Math.min(640, cardLayout.implicitHeight + 28)
 
     color: "transparent"
 
@@ -280,10 +279,7 @@ PanelWindow {
     // Outer Shell Card
     Rectangle {
         id: mainCard
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        implicitHeight: cardLayout.implicitHeight + 28
+        anchors.fill: parent
         radius: 20
         color: root.colSurface
         border.color: root.colOutlineVariant
@@ -363,8 +359,10 @@ PanelWindow {
                             }
                         }
 
-                        TapHandler {
-                            onTapped: root.currentMainTab = "tasks"
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.currentMainTab = "tasks"
                         }
                     }
 
@@ -404,8 +402,10 @@ PanelWindow {
                             }
                         }
 
-                        TapHandler {
-                            onTapped: {
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
                                 root.currentMainTab = "agenda"
                                 syncCalendarProc.running = true
                             }
@@ -467,8 +467,10 @@ PanelWindow {
                                     font.weight: root.activeFilter === modelData.key ? Font.Medium : Font.Normal
                                     color: root.activeFilter === modelData.key ? root.colText : root.colOutline
                                 }
-                                TapHandler {
-                                    onTapped: {
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
                                         root.activeFilter = modelData.key
                                         root.syncTaskModel()
                                     }
@@ -665,8 +667,10 @@ PanelWindow {
                                             font.bold: true
                                             color: "#162319"
                                         }
-                                        TapHandler {
-                                            onTapped: root.toggleTask(model.rawIndex)
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: root.toggleTask(model.rawIndex)
                                         }
                                     }
 
@@ -683,8 +687,10 @@ PanelWindow {
                                             font.bold: true
                                             color: model.type === "daily" ? root.colTertiary : root.colOutlineVariant
                                         }
-                                        TapHandler {
-                                            onTapped: root.toggleRecurring(model.rawIndex)
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: root.toggleRecurring(model.rawIndex)
                                         }
                                     }
 
@@ -697,8 +703,10 @@ PanelWindow {
                                         color: model.done ? root.colOutline : root.colText
                                         elide: Text.ElideRight
 
-                                        TapHandler {
-                                            onTapped: root.toggleTask(model.rawIndex)
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: root.toggleTask(model.rawIndex)
                                         }
                                     }
                                 }
@@ -724,12 +732,13 @@ PanelWindow {
                     // Task Input Field (Clean, Enter to add)
                     RowLayout {
                         Layout.fillWidth: true
+                        Layout.preferredHeight: 36
                         spacing: 8
 
                         TextField {
                             id: inputField
                             Layout.fillWidth: true
-                            height: 36
+                            Layout.preferredHeight: 36
                             placeholderText: root.nextTaskIsDaily ? "Add daily habit... (Press Enter)" : "Add task... (Press Enter)"
                             placeholderTextColor: root.colOutline
                             color: root.colText
@@ -757,21 +766,24 @@ PanelWindow {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
                             radius: 10
-                            color: root.nextTaskIsDaily ? root.colTertiary : (repBtnHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
+                            color: root.nextTaskIsDaily ? root.colTertiary : (repBtnMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh)
                             border.color: root.nextTaskIsDaily ? "transparent" : root.colOutlineVariant
                             border.width: 1
-
-                            HoverHandler { id: repBtnHover }
-                            TapHandler {
-                                onTapped: root.nextTaskIsDaily = !root.nextTaskIsDaily
-                            }
 
                             Text {
                                 anchors.centerIn: parent
                                 text: "↻"
                                 font.pixelSize: 18
                                 font.bold: true
-                                color: root.nextTaskIsDaily ? root.colSurfaceHighest : (repBtnHover.hovered ? root.colText : root.colOutline)
+                                color: root.nextTaskIsDaily ? root.colSurfaceHighest : root.colOutline
+                            }
+
+                            MouseArea {
+                                id: repBtnMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.nextTaskIsDaily = !root.nextTaskIsDaily
                             }
                         }
                     }
@@ -824,8 +836,10 @@ PanelWindow {
                                         color: root.agendaFilter === modelData.key ? "#2a1526" : root.colText
                                     }
                                 }
-                                TapHandler {
-                                    onTapped: {
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
                                         root.agendaFilter = modelData.key
                                         root.syncAgendaModel()
                                     }
@@ -838,12 +852,7 @@ PanelWindow {
                             Layout.preferredWidth: 26
                             Layout.preferredHeight: 26
                             radius: 8
-                            color: syncHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh
-
-                            HoverHandler { id: syncHover }
-                            TapHandler {
-                                onTapped: syncCalendarProc.running = true
-                            }
+                            color: syncMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh
 
                             Text {
                                 anchors.centerIn: parent
@@ -851,6 +860,13 @@ PanelWindow {
                                 font.pixelSize: 14
                                 font.bold: true
                                 color: root.colTertiary
+                            }
+                            MouseArea {
+                                id: syncMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: syncCalendarProc.running = true
                             }
                         }
                     }
@@ -1061,6 +1077,7 @@ PanelWindow {
                     // Quick Add Event Field (Press Enter to Add!)
                     RowLayout {
                         Layout.fillWidth: true
+                        Layout.preferredHeight: 36
                         spacing: 8
 
                         function triggerAddEvent() {
@@ -1076,7 +1093,7 @@ PanelWindow {
                         TextField {
                             id: eventTitleInput
                             Layout.fillWidth: true
-                            height: 36
+                            Layout.preferredHeight: 36
                             placeholderText: "Event title... (Press Enter)"
                             placeholderTextColor: root.colOutline
                             color: root.colText
