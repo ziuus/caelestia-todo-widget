@@ -645,14 +645,14 @@ PanelWindow {
                             background: Rectangle {
                                 color: root.colSurfaceHigh
                                 radius: 9
-                                border.color: inputField.activeFocus ? (root.activeCategory === "today" ? root.colPrimary : root.colTertiary) : root.colOutlineVariant
+                                border.color: inputField.activeFocus ? (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary) : root.colOutlineVariant
                                 border.width: 1
                             }
                             padding: 8
 
                             onAccepted: {
                                 if (text.trim().length > 0) {
-                                    root.addTask(text)
+                                    root.addTask(text.trim(), root.nextTaskIsDaily ? "daily" : "today")
                                     text = ""
                                 }
                             }
@@ -662,20 +662,42 @@ PanelWindow {
                             width: 36
                             height: 36
                             radius: 9
-                            color: root.activeCategory === "today" ? root.colPrimary : root.colTertiary
+                            color: root.nextTaskIsDaily ? root.colTertiary : "transparent"
+                            border.color: root.nextTaskIsDaily ? "transparent" : root.colOutlineVariant
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "↻"
+                                font.pixelSize: 18
+                                font.bold: true
+                                color: root.nextTaskIsDaily ? root.colSurfaceHighest : root.colOutline
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.nextTaskIsDaily = !root.nextTaskIsDaily
+                            }
+                        }
+
+                        Rectangle {
+                            width: 36
+                            height: 36
+                            radius: 9
+                            color: root.nextTaskIsDaily ? root.colTertiary : root.colPrimary
                             Text {
                                 anchors.centerIn: parent
                                 text: "+"
                                 font.pixelSize: 18
                                 font.bold: true
-                                color: root.activeCategory === "today" ? root.colTextOnPrimary : "#2a1526"
+                                color: root.nextTaskIsDaily ? "#2a1526" : root.colTextOnPrimary
                             }
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (inputField.text.trim().length > 0) {
-                                        root.addTask(inputField.text)
+                                        root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
                                         inputField.text = ""
                                     }
                                 }
