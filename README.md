@@ -13,6 +13,7 @@ A highly polished, fully animated, desktop-embedded Wayland widget for tracking 
 - **Dual Views & Icon Filters**:
   - **Tasks**: Filter by All, Active, Completed, or Daily recurring habits.
   - **Calendar**: Filter by Today, Upcoming, and All events with one-click Google Calendar sync.
+- **Emerging Adaptive Card**: Smooth Caelestia-style spline transitions when resizing or expanding, paired with Wayland `Region` click-masking so clicks through unused areas pass directly to your desktop.
 - **Wayland Native**: Runs on `WlrLayer.Bottom` directly on your desktop wallpaper behind active windows with zero-lag pointer handlers.
 - **Catppuccin Styled**: Integrated Mocha tonal palette with Material Symbols Rounded icons.
 
