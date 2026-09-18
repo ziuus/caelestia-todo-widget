@@ -26,7 +26,7 @@ PanelWindow {
     }
 
     implicitWidth: 360
-    implicitHeight: 520 // FIXED HEIGHT to bypass Wayland dynamic input desync
+    implicitHeight: Math.min(640, mainCard.implicitHeight) // Restore dynamic sizing!
 
     color: "transparent"
 
@@ -279,9 +279,10 @@ PanelWindow {
     // Outer Shell Card
     Rectangle {
         id: mainCard
-        anchors.fill: parent
-        
-
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        implicitHeight: cardLayout.implicitHeight + 28
         radius: 20
         color: root.colSurface
         border.color: root.colOutlineVariant
@@ -289,7 +290,9 @@ PanelWindow {
 
         ColumnLayout {
             id: cardLayout
-            anchors.fill: parent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: 14
             spacing: 12
 
@@ -422,7 +425,7 @@ PanelWindow {
             Item {
                 id: slidingContainer
                 Layout.fillWidth: true
-                Layout.fillHeight: true // Fill remaining space!
+                implicitHeight: (root.currentMainTab === "tasks" ? tasksView.implicitHeight : agendaView.implicitHeight)
                 clip: true
 
                 // ------------------------------------------
@@ -486,13 +489,60 @@ PanelWindow {
                         height: 1
                         color: root.colOutlineVariant
                     }
+                    // Super Cool Empty State
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: 180
+                        visible: taskModel.count === 0
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 12
+
+                            Text {
+                                text: "task_alt"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 56
+                                color: root.colPrimary
+                                Layout.alignment: Qt.AlignHCenter
+                                
+                                property real floatOffset: 0
+                                NumberAnimation on floatOffset {
+                                    from: 0; to: 2 * Math.PI; duration: 3000; loops: Animation.Infinite
+                                }
+                                transform: Translate {
+                                    y: Math.sin(parent.children[0].floatOffset) * 6
+                                }
+                                
+                                layer.enabled: true
+                                // We don't have DropShadow imported by default so we just use the glow color
+                            }
+                            
+                            Text {
+                                text: "You're all caught up!"
+                                font.pixelSize: 15
+                                font.bold: true
+                                color: root.colText
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            
+                            Text {
+                                text: "Enjoy the peace, or add a new task below."
+                                font.pixelSize: 12
+                                color: root.colTextVariant
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+                    }
+
+
 
                     // Task List View
                     ListView {
                         id: taskListView
                         Layout.fillWidth: true
-                        Layout.fillHeight: true // Fill the remaining space!
-                        // Removed dynamic implicitHeight
+                        implicitHeight: Math.min(320, contentHeight)
+                        visible: taskModel.count > 0
                         clip: true
                         add: Transition {
                             ParallelAnimation {
