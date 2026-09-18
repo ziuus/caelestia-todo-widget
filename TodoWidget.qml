@@ -335,7 +335,6 @@ PanelWindow {
                             anchors.centerIn: parent
                             spacing: 6
                             Text {
-                                id: emptyIcon
                                 text: "task_alt"
                                 font.family: "Material Symbols Rounded"
                                 font.pixelSize: 16
@@ -501,7 +500,7 @@ PanelWindow {
                             spacing: 12
 
                             Text {
-                                id: emptyIcon
+                                id: emptyIconTasks
                                 text: "task_alt"
                                 font.family: "Material Symbols Rounded"
                                 font.pixelSize: 56
@@ -513,7 +512,7 @@ PanelWindow {
                                     from: 0; to: 2 * Math.PI; duration: 3000; loops: Animation.Infinite
                                 }
                                 transform: Translate {
-                                    y: Math.sin(emptyIcon.floatOffset) * 6
+                                    y: Math.sin(emptyIconTasks.floatOffset) * 6
                                 }
                                 
                                 layer.enabled: true
