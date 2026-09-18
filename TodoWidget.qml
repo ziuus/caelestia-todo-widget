@@ -602,6 +602,28 @@ PanelWindow {
                                 anchors.rightMargin: 8
                                 spacing: 10
 
+                                // X Button on the LEFT!
+                                Rectangle {
+                                    Layout.preferredWidth: 22
+                                    Layout.preferredHeight: 22
+                                    radius: 6
+                                    color: xHandler.pressed ? root.colError : (xHover.hovered ? root.colSurfaceHighest : "transparent")
+                                    
+                                    HoverHandler { id: xHover }
+                                    TapHandler {
+                                        id: xHandler
+                                        onTapped: { console.log("DEBUG: X TAPPED!"); root.deleteTask(model.rawIndex); }
+                                    }
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "×"
+                                        font.pixelSize: 16
+                                        font.bold: true
+                                        color: xHover.hovered ? root.colError : root.colOutline
+                                    }
+                                }
+
                                 Rectangle {
                                     Layout.preferredWidth: 20
                                     Layout.preferredHeight: 20
@@ -662,23 +684,7 @@ PanelWindow {
                                     }
                                 }
 
-                                Button {
-                                    Layout.preferredWidth: 22
-                                    Layout.preferredHeight: 22
-                                    onClicked: { console.log("DEBUG: X BUTTON CLICKED for index " + model.rawIndex); root.deleteTask(model.rawIndex); }
-                                    background: Rectangle {
-                                        radius: 6
-                                        color: parent.hovered ? root.colSurfaceHighest : "transparent"
-                                    }
-                                    contentItem: Text {
-                                        text: "×"
-                                        font.pixelSize: 16
-                                        font.bold: true
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        color: parent.hovered ? root.colError : root.colOutline
-                                    }
-                                }
+
                             }
                         }
                     }
@@ -703,6 +709,34 @@ PanelWindow {
                         Layout.fillWidth: true
                         spacing: 8
 
+                        // + Button on the LEFT!
+                        Rectangle {
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
+                            radius: 8
+                            color: plusHover.hovered ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
+                            
+                            HoverHandler { id: plusHover }
+                            TapHandler {
+                                id: plusHandler
+                                onTapped: {
+                                    console.log("DEBUG: + TAPPED!")
+                                    if (inputField.text.trim().length > 0) {
+                                        root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
+                                        inputField.text = ""
+                                    }
+                                }
+                            }
+                            
+                            Text {
+                                anchors.centerIn: parent
+                                text: "+"
+                                font.pixelSize: 18
+                                font.bold: true
+                                color: root.colTextOnPrimary
+                            }
+                        }
+                        
                         TextField {
                             id: inputField
                             Layout.fillWidth: true
