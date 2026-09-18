@@ -77,35 +77,41 @@ PanelWindow {
 
     Process {
         id: readProc
-        command: ["cat", Quickshell.env.HOME + "/.local/state/todos.json"]
-        onExited: {
-            if (stdout && stdout.trim().length > 0) {
-                try {
-                    var data = JSON.parse(stdout)
-                    var curDate = getTodayString()
+        command: ["bash", "-c", "cat " + Quickshell.env.HOME + "/.local/state/todos.json | tr -d '\n'"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (data && data.trim().length > 0) {
+                    try {
+                        var parsed = JSON.parse(data)
+                        var curDate = root.getTodayString()
 
-                    if (Array.isArray(data)) {
-                        todayList = data
-                        dailyList = []
-                        lastResetDate = curDate
-                    } else {
-                        todayList = Array.isArray(data.today) ? data.today : []
-                        dailyList = Array.isArray(data.daily) ? data.daily : []
-                        lastResetDate = data.lastResetDate || curDate
+                        if (Array.isArray(parsed)) {
+                            root.todayList = parsed
+                            root.dailyList = []
+                            root.lastResetDate = curDate
+                        } else {
+                            root.todayList = Array.isArray(parsed.today) ? parsed.today : []
+                            root.dailyList = Array.isArray(parsed.daily) ? parsed.daily : []
+                            root.lastResetDate = parsed.lastResetDate || curDate
 
-                        if (lastResetDate !== curDate) {
-                            for (var i = 0; i < dailyList.length; i++) {
-                                dailyList[i].done = false
+                            if (root.lastResetDate !== curDate) {
+                                for (var i = 0; i < root.dailyList.length; i++) {
+                                    root.dailyList[i].done = false
+                                }
+                                root.lastResetDate = curDate
+                                root.saveTodos()
                             }
-                            lastResetDate = curDate
-                            saveTodos()
                         }
+                        root.syncTaskModel()
+                    } catch (e) {
+                        root.syncTaskModel()
                     }
-                    syncTaskModel()
-                } catch (e) {
-                    syncTaskModel()
+                } else {
+                    root.syncTaskModel()
                 }
-            } else {
+            }
+        }
+    } else {
                 syncTaskModel()
             }
         }
@@ -201,16 +207,22 @@ PanelWindow {
 
     Process {
         id: readEventsProc
-        command: ["cat", Quickshell.env.HOME + "/.local/state/calendar_events.json"]
-        onExited: {
-            if (stdout && stdout.trim().length > 0) {
-                try {
-                    allEvents = JSON.parse(stdout)
-                    syncAgendaModel()
-                } catch (e) {
-                    syncAgendaModel()
+        command: ["bash", "-c", "cat " + Quickshell.env.HOME + "/.local/state/calendar_events.json | tr -d '\n'"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (data && data.trim().length > 0) {
+                    try {
+                        root.allEvents = JSON.parse(data)
+                        root.syncAgendaModel()
+                    } catch (e) {
+                        root.syncAgendaModel()
+                    }
+                } else {
+                    root.syncAgendaModel()
                 }
-            } else {
+            }
+        }
+    } else {
                 syncAgendaModel()
             }
         }
@@ -437,8 +449,9 @@ PanelWindow {
                         spacing: 8
 
                         Rectangle {
+                            implicitWidth: 80
+                            implicitHeight: 32
                             Layout.fillWidth: true
-                            height: 32
                             radius: 9
                             color: root.activeCategory === "today" ? root.colPrimary : root.colSurfaceHigh
                             Behavior on color { ColorAnimation { duration: 140 } }
@@ -464,8 +477,9 @@ PanelWindow {
                         }
 
                         Rectangle {
+                            implicitWidth: 80
+                            implicitHeight: 32
                             Layout.fillWidth: true
-                            height: 32
                             radius: 9
                             color: root.activeCategory === "daily" ? root.colTertiary : root.colSurfaceHigh
                             Behavior on color { ColorAnimation { duration: 140 } }
