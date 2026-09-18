@@ -566,106 +566,174 @@ PanelWindow {
                         interactive: contentHeight > 320
                         model: taskModel
 
-                        delegate: Rectangle {
+                        delegate: Item {
+                            id: taskItemWrapper
                             width: taskListView.width
                             height: 42
-                            radius: 9
-                            color: taskHoverArea.containsMouse ? root.colSurfaceHighest : (model.done ? root.colSurfaceLow : root.colSurfaceHigh)
-                            border.color: taskHoverArea.containsMouse ? root.colOutline : (model.done ? "transparent" : root.colOutlineVariant)
-                            border.width: 1
-                            scale: taskHoverArea.containsMouse ? 1.015 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                            MouseArea {
-                                id: taskHoverArea
+                            clip: true
+
+                            // Underneath: Red Slide-to-Delete background reveal
+                            Rectangle {
                                 anchors.fill: parent
-                                hoverEnabled: true
-                                propagateComposedEvents: true
-                                onClicked: mouse.accepted = false
+                                radius: 9
+                                color: root.colError
+                                opacity: Math.min(1.0, Math.abs(taskCard.x) / 60)
+
+                                RowLayout {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 6
+
+                                    Text {
+                                        text: "delete"
+                                        font.family: "Material Symbols Rounded"
+                                        font.pixelSize: 18
+                                        color: "#2a1526"
+                                    }
+                                    Text {
+                                        text: taskCard.x < -80 ? "Release to delete" : "Slide to delete"
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: "#2a1526"
+                                    }
+                                }
                             }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 10
-                                anchors.rightMargin: 8
-                                spacing: 10
+                            // Top: Draggable Task Card
+                            Rectangle {
+                                id: taskCard
+                                width: parent.width
+                                height: parent.height
+                                radius: 9
+                                color: taskHover.hovered ? root.colSurfaceHighest : (model.done ? root.colSurfaceLow : root.colSurfaceHigh)
+                                border.color: taskHover.hovered ? root.colOutline : (model.done ? "transparent" : root.colOutlineVariant)
+                                border.width: 1
 
-                                // Checkbox (Left)
-                                Rectangle {
-                                    Layout.preferredWidth: 20
-                                    Layout.preferredHeight: 20
-                                    width: 20
-                                    height: 20
-                                    radius: 6
-                                    color: model.done ? root.colSuccess : "transparent"
-                                    border.color: model.done ? root.colSuccess : root.colOutline
-                                    border.width: 1.5
+                                DragHandler {
+                                    id: dragHandler
+                                    target: taskCard
+                                    xAxis.maximum: 0
+                                    xAxis.minimum: -taskItemWrapper.width
+                                    yAxis.enabled: false
 
-                                    Text {
-                                        visible: model.done
-                                        anchors.centerIn: parent
-                                        text: "✓"
-                                        font.pixelSize: 12
-                                        font.bold: true
-                                        color: "#162319"
-                                    }
-                                    TapHandler {
-                                        onTapped: root.toggleTask(model.rawIndex)
+                                    onActiveChanged: {
+                                        if (!active) {
+                                            if (taskCard.x < -80) {
+                                                deleteAnim.start()
+                                            } else {
+                                                snapAnim.start()
+                                            }
+                                        }
                                     }
                                 }
 
-                                // Recurring indicator
-                                Rectangle {
-                                    Layout.preferredWidth: 20
-                                    Layout.preferredHeight: 20
-                                    width: 20
-                                    height: 20
-                                    radius: 4
-                                    color: "transparent"
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "↻"
-                                        font.pixelSize: 14
-                                        font.bold: true
-                                        color: model.type === "daily" ? root.colTertiary : root.colOutlineVariant
+                                NumberAnimation {
+                                    id: snapAnim
+                                    target: taskCard
+                                    property: "x"
+                                    to: 0
+                                    duration: 220
+                                    easing.type: Easing.OutBack
+                                }
+
+                                SequentialAnimation {
+                                    id: deleteAnim
+                                    ParallelAnimation {
+                                        NumberAnimation { target: taskCard; property: "x"; to: -taskItemWrapper.width; duration: 180; easing.type: Easing.InQuad }
+                                        NumberAnimation { target: taskCard; property: "opacity"; to: 0; duration: 180 }
                                     }
-                                    TapHandler {
-                                        onTapped: root.toggleRecurring(model.rawIndex)
+                                    ScriptAction {
+                                        script: root.deleteTask(model.rawIndex)
                                     }
                                 }
 
-                                // Task Title
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: model.text
-                                    font.pixelSize: 13
-                                    font.strikeout: model.done
-                                    color: model.done ? root.colOutline : root.colText
-                                    elide: Text.ElideRight
+                                HoverHandler { id: taskHover }
 
-                                    TapHandler {
-                                        onTapped: root.toggleTask(model.rawIndex)
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 10
+                                    anchors.rightMargin: 8
+                                    spacing: 10
+
+                                    // Checkbox (Left)
+                                    Rectangle {
+                                        Layout.preferredWidth: 20
+                                        Layout.preferredHeight: 20
+                                        width: 20
+                                        height: 20
+                                        radius: 6
+                                        color: model.done ? root.colSuccess : "transparent"
+                                        border.color: model.done ? root.colSuccess : root.colOutline
+                                        border.width: 1.5
+
+                                        Text {
+                                            visible: model.done
+                                            anchors.centerIn: parent
+                                            text: "✓"
+                                            font.pixelSize: 12
+                                            font.bold: true
+                                            color: "#162319"
+                                        }
+                                        TapHandler {
+                                            onTapped: root.toggleTask(model.rawIndex)
+                                        }
                                     }
-                                }
 
-                                // Delete X Button (RIGHT)
-                                Rectangle {
-                                    Layout.preferredWidth: 22
-                                    Layout.preferredHeight: 22
-                                    radius: 6
-                                    color: xHandler.pressed ? root.colError : (xHover.hovered ? root.colSurfaceHighest : "transparent")
-
-                                    HoverHandler { id: xHover }
-                                    TapHandler {
-                                        id: xHandler
-                                        onTapped: root.deleteTask(model.rawIndex)
+                                    // Recurring indicator
+                                    Rectangle {
+                                        Layout.preferredWidth: 20
+                                        Layout.preferredHeight: 20
+                                        width: 20
+                                        height: 20
+                                        radius: 4
+                                        color: "transparent"
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "↻"
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                            color: model.type === "daily" ? root.colTertiary : root.colOutlineVariant
+                                        }
+                                        TapHandler {
+                                            onTapped: root.toggleRecurring(model.rawIndex)
+                                        }
                                     }
 
+                                    // Task Title
                                     Text {
-                                        anchors.centerIn: parent
-                                        text: "×"
-                                        font.pixelSize: 16
-                                        font.bold: true
-                                        color: xHover.hovered ? root.colError : root.colOutline
+                                        Layout.fillWidth: true
+                                        text: model.text
+                                        font.pixelSize: 13
+                                        font.strikeout: model.done
+                                        color: model.done ? root.colOutline : root.colText
+                                        elide: Text.ElideRight
+
+                                        TapHandler {
+                                            onTapped: root.toggleTask(model.rawIndex)
+                                        }
+                                    }
+
+                                    // Delete X Button (RIGHT) - tap to delete as well
+                                    Rectangle {
+                                        Layout.preferredWidth: 22
+                                        Layout.preferredHeight: 22
+                                        radius: 6
+                                        color: xHandler.pressed ? root.colError : (xHover.hovered ? root.colSurfaceHighest : "transparent")
+
+                                        HoverHandler { id: xHover }
+                                        TapHandler {
+                                            id: xHandler
+                                            onTapped: root.deleteTask(model.rawIndex)
+                                        }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "×"
+                                            font.pixelSize: 16
+                                            font.bold: true
+                                            color: xHover.hovered ? root.colError : root.colOutline
+                                        }
                                     }
                                 }
                             }
