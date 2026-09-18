@@ -49,10 +49,9 @@ PanelWindow {
     property string currentMainTab: "tasks"
 
     // Tasks State
-    property string activeCategory: "today" // "today" | "daily"
+    property bool nextTaskIsDaily: false
     property string activeFilter: "all"     // "all" | "active" | "done"
-    property var todayList: []
-    property var dailyList: []
+    property var masterList: []
     property string lastResetDate: ""
 
     // Agenda State
@@ -86,17 +85,22 @@ PanelWindow {
                         var curDate = root.getTodayString()
 
                         if (Array.isArray(parsed)) {
-                            root.todayList = parsed
-                            root.dailyList = []
+                            root.masterList = parsed.map(t => ({text: t.text || t, done: t.done || false, type: t.type || "today"}))
                             root.lastResetDate = curDate
                         } else {
-                            root.todayList = Array.isArray(parsed.today) ? parsed.today : []
-                            root.dailyList = Array.isArray(parsed.daily) ? parsed.daily : []
+                            var m = []
+                            if (Array.isArray(parsed.today)) {
+                                m = m.concat(parsed.today.map(t => ({text: t.text, done: t.done, type: "today"})))
+                            }
+                            if (Array.isArray(parsed.daily)) {
+                                m = m.concat(parsed.daily.map(t => ({text: t.text, done: t.done, type: "daily"})))
+                            }
+                            root.masterList = m
                             root.lastResetDate = parsed.lastResetDate || curDate
 
                             if (root.lastResetDate !== curDate) {
-                                for (var i = 0; i < root.dailyList.length; i++) {
-                                    root.dailyList[i].done = false
+                                for (var i = 0; i < root.masterList.length; i++) {
+                                    if (root.masterList[i].type === "daily") root.masterList[i].done = false
                                 }
                                 root.lastResetDate = curDate
                                 root.saveTodos()
@@ -122,10 +126,9 @@ PanelWindow {
     function saveTodos() {
         var payload = {
             "lastResetDate": lastResetDate || getTodayString(),
-            "today": todayList,
-            "daily": dailyList
+            "master": masterList
         }
-        writeProc.content = JSON.stringify(payload, null, 2)
+        writeProc.content = JSON.stringify(masterList, null, 2)
         writeProc.running = true
     }
 
@@ -149,47 +152,38 @@ PanelWindow {
     }
 
     function toggleTask(rawIndex) {
-        var source = (activeCategory === "today") ? todayList : dailyList
-        if (rawIndex >= 0 && rawIndex < source.length) {
-            source[rawIndex].done = !source[rawIndex].done
+        if (rawIndex >= 0 && rawIndex < masterList.length) {
+            var temp = masterList
+            temp[rawIndex].done = !temp[rawIndex].done
+            masterList = temp
             saveTodos()
             syncTaskModel()
         }
     }
 
     function deleteTask(rawIndex) {
-        var source = (activeCategory === "today") ? todayList : dailyList
-        if (rawIndex >= 0 && rawIndex < source.length) {
-            source.splice(rawIndex, 1)
+        if (rawIndex >= 0 && rawIndex < masterList.length) {
+            var temp = masterList
+            temp.splice(rawIndex, 1)
+            masterList = temp
             saveTodos()
             syncTaskModel()
         }
     }
 
-    function addTask(text) {
-        if (!text || text.trim().length === 0) return
-        var item = { "text": text.trim(), "done": false }
-        if (activeCategory === "today") {
-            todayList.push(item)
-        } else {
-            dailyList.push(item)
-        }
+    function addTask(text, type) {
+        var temp = masterList
+        temp.push({"text": text, "done": false, "type": type})
+        masterList = temp
         saveTodos()
         syncTaskModel()
     }
 
-    function resetDailyHabits() {
-        for (var i = 0; i < dailyList.length; i++) {
-            dailyList[i].done = false
-        }
-        saveTodos()
-        syncTaskModel()
-    }
 
-    function countPending(list) {
+    function countPending() {
         var c = 0
-        for (var i = 0; i < list.length; i++) {
-            if (!list[i].done) c++
+        for (var i = 0; i < masterList.length; i++) {
+            if (!masterList[i].done) c++
         }
         return c
     }
@@ -346,7 +340,7 @@ PanelWindow {
                                 color: root.currentMainTab === "tasks" ? root.colTextOnPrimary : root.colSurfaceHigh
                                 Text {
                                     anchors.centerIn: parent
-                                    text: String(root.countPending(root.todayList) + root.countPending(root.dailyList))
+                                    text: String(root.countPending())
                                     font.pixelSize: 10
                                     font.bold: true
                                     color: root.currentMainTab === "tasks" ? root.colPrimary : root.colTextVariant
@@ -433,88 +427,6 @@ PanelWindow {
                     }
                     Behavior on opacity {
                         NumberAnimation { duration: 180 }
-                    }
-
-                    // Category Switcher: Today vs Daily
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-
-                        Rectangle {
-                            implicitWidth: 80
-                            implicitHeight: 32
-                            Layout.fillWidth: true
-                            radius: 9
-                            color: root.activeCategory === "today" ? root.colPrimary : root.colSurfaceHigh
-                            Behavior on color { ColorAnimation { duration: 140 } }
-
-                            RowLayout {
-                                anchors.centerIn: parent
-                                spacing: 6
-                                Text {
-                                    text: "Today"
-                                    font.pixelSize: 12
-                                    font.bold: true
-                                    color: root.activeCategory === "today" ? root.colTextOnPrimary : root.colText
-                                }
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    root.activeCategory = "today"
-                                    root.syncTaskModel()
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            implicitWidth: 80
-                            implicitHeight: 32
-                            Layout.fillWidth: true
-                            radius: 9
-                            color: root.activeCategory === "daily" ? root.colTertiary : root.colSurfaceHigh
-                            Behavior on color { ColorAnimation { duration: 140 } }
-
-                            RowLayout {
-                                anchors.centerIn: parent
-                                spacing: 6
-                                Text {
-                                    text: "Daily"
-                                    font.pixelSize: 12
-                                    font.bold: true
-                                    color: root.activeCategory === "daily" ? "#2a1526" : root.colText
-                                }
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    root.activeCategory = "daily"
-                                    root.syncTaskModel()
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            visible: root.activeCategory === "daily" && root.dailyList.length > 0
-                            width: 32
-                            height: 32
-                            radius: 9
-                            color: root.colSurfaceHigh
-                            Text {
-                                anchors.centerIn: parent
-                                text: "↻"
-                                font.pixelSize: 15
-                                font.bold: true
-                                color: root.colTertiary
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.resetDailyHabits()
-                            }
-                        }
                     }
 
                     // Filter Pills
@@ -634,6 +546,12 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    visible: model.type === "daily"
+                                    text: "↻"
+                                    font.pixelSize: 12
+                                    color: model.done ? root.colOutline : root.colTertiary
+                                }
+                                Text {
                                     Layout.fillWidth: true
                                     text: model.text
                                     font.pixelSize: 13
@@ -681,7 +599,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: root.activeFilter === "done" 
                                 ? "No completed tasks yet" 
-                                : (root.activeFilter === "active" ? "All done! ✦" : (root.activeCategory === "today" ? "No tasks for today" : "No daily habits added"))
+                                : (root.activeFilter === "active" ? "All done! ✦" : "No tasks added")
                             font.pixelSize: 12
                             color: root.colOutline
                         }
@@ -696,7 +614,7 @@ PanelWindow {
                             id: inputField
                             Layout.fillWidth: true
                             height: 36
-                            placeholderText: root.activeCategory === "today" ? "Add task to Today..." : "Add daily habit..."
+                            placeholderText: root.nextTaskIsDaily ? "Add daily habit..." : "Add task..."
                             placeholderTextColor: root.colOutline
                             color: root.colText
                             font.pixelSize: 12
