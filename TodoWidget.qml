@@ -25,8 +25,8 @@ PanelWindow {
         right: 28
     }
 
-    width: 360
-    height: 520 // FIXED HEIGHT to completely bypass Wayland dynamic input region desync bugs!
+    implicitWidth: 360
+    implicitHeight: 520 // FIXED HEIGHT to bypass Wayland dynamic input desync
 
     color: "transparent"
 
