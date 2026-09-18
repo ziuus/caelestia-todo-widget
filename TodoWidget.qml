@@ -144,18 +144,18 @@ PanelWindow {
 
     function syncTaskModel() {
         taskModel.clear()
-        var source = (activeCategory === "today") ? todayList : dailyList
-        for (var i = 0; i < source.length; i++) {
-            var item = source[i]
+        for (var i = 0; i < masterList.length; i++) {
+            var item = masterList[i]
             var matches = true
             if (activeFilter === "active" && item.done) matches = false
             if (activeFilter === "done" && !item.done) matches = false
 
             if (matches) {
                 taskModel.append({
-                    "rawIndex": i,
                     "text": item.text,
-                    "done": item.done
+                    "done": item.done,
+                    "rawIndex": i,
+                    "type": item.type || "today"
                 })
             }
         }
