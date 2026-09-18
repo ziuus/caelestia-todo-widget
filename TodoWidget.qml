@@ -111,10 +111,6 @@ PanelWindow {
                 }
             }
         }
-    } else {
-                syncTaskModel()
-            }
-        }
     }
 
     Process {
@@ -220,10 +216,6 @@ PanelWindow {
                 } else {
                     root.syncAgendaModel()
                 }
-            }
-        }
-    } else {
-                syncAgendaModel()
             }
         }
     }
