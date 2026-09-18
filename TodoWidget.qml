@@ -519,8 +519,8 @@ PanelWindow {
                             width: taskListView.width
                             height: 42
                             radius: 9
-                            color: model.done ? root.colSurfaceLow : root.colSurfaceHigh
-                            border.color: model.done ? "transparent" : root.colOutlineVariant
+                            color: taskHoverArea.containsMouse ? root.colSurfaceHighest : (model.done ? root.colSurfaceLow : root.colSurfaceHigh)
+                            border.color: taskHoverArea.containsMouse ? root.colOutline : (model.done ? "transparent" : root.colOutlineVariant)
                             border.width: 1
                             scale: taskHoverArea.containsMouse ? 1.015 : 1.0
                             Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
@@ -672,11 +672,11 @@ PanelWindow {
 
                         Rectangle {
                             implicitWidth: 36
-                                    implicitHeight: 36
-                                    width: 36
-                                    height: 36
+                            implicitHeight: 36
+                            width: 36
+                            height: 36
                             radius: 9
-                            color: root.nextTaskIsDaily ? root.colTertiary : "transparent"
+                            color: root.nextTaskIsDaily ? root.colTertiary : (repBtnMouse.containsMouse ? root.colSurfaceHighest : "transparent")
                             border.color: root.nextTaskIsDaily ? "transparent" : root.colOutlineVariant
                             border.width: 1
 
@@ -688,7 +688,9 @@ PanelWindow {
                                 color: root.nextTaskIsDaily ? root.colSurfaceHighest : root.colOutline
                             }
                             MouseArea {
+                                id: repBtnMouse
                                 anchors.fill: parent
+                                hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.nextTaskIsDaily = !root.nextTaskIsDaily
                             }
@@ -696,11 +698,11 @@ PanelWindow {
 
                         Rectangle {
                             implicitWidth: 36
-                                    implicitHeight: 36
-                                    width: 36
-                                    height: 36
+                            implicitHeight: 36
+                            width: 36
+                            height: 36
                             radius: 9
-                            color: root.nextTaskIsDaily ? root.colTertiary : root.colPrimary
+                            color: addBtnMouse.containsMouse ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
                             Text {
                                 anchors.centerIn: parent
                                 text: "+"
@@ -709,7 +711,9 @@ PanelWindow {
                                 color: root.nextTaskIsDaily ? "#2a1526" : root.colTextOnPrimary
                             }
                             MouseArea {
+                                id: addBtnMouse
                                 anchors.fill: parent
+                                hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (inputField.text.trim().length > 0) {
