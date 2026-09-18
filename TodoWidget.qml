@@ -1,3 +1,4 @@
+import QtQuick.Controls 2.15
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -600,26 +601,21 @@ PanelWindow {
                                     }
                                 }
 
-                                Rectangle {
+                                Button {
                                     Layout.preferredWidth: 22
                                     Layout.preferredHeight: 22
-                                    width: 22
-                                    height: 22
-                                    radius: 6
-                                    color: itemDelMouse.containsMouse ? root.colSurfaceHighest : "transparent"
-                                    Text {
-                                        anchors.centerIn: parent
+                                    onClicked: root.deleteTask(model.rawIndex)
+                                    background: Rectangle {
+                                        radius: 6
+                                        color: parent.hovered ? root.colSurfaceHighest : "transparent"
+                                    }
+                                    contentItem: Text {
                                         text: "×"
                                         font.pixelSize: 16
                                         font.bold: true
-                                        color: itemDelMouse.containsMouse ? root.colError : root.colOutline
-                                    }
-                                    MouseArea {
-                                        id: itemDelMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.deleteTask(model.rawIndex)
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        color: parent.hovered ? root.colError : root.colOutline
                                     }
                                 }
                             }
@@ -696,29 +692,26 @@ PanelWindow {
                             }
                         }
 
-                        Rectangle {
+                        Button {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
-                            radius: 9
-                            color: addBtnMouse.containsMouse ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
-                            Text {
-                                anchors.centerIn: parent
+                            onClicked: {
+                                if (inputField.text.trim().length > 0) {
+                                    root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
+                                    inputField.text = ""
+                                }
+                            }
+                            background: Rectangle {
+                                radius: 9
+                                color: parent.hovered ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
+                            }
+                            contentItem: Text {
                                 text: "+"
                                 font.pixelSize: 18
                                 font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
                                 color: root.nextTaskIsDaily ? "#2a1526" : root.colTextOnPrimary
-                            }
-                            MouseArea {
-                                id: addBtnMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (inputField.text.trim().length > 0) {
-                                        root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
-                                        inputField.text = ""
-                                    }
-                                }
                             }
                         }
                     }
