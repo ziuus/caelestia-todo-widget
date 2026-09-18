@@ -1,14 +1,20 @@
 # Quickshell Premium Todo & Calendar Widget
 
-A highly polished, fully animated, desktop-embedded Wayland widget for tracking tasks and calendar events seamlessly.
+A highly polished, fully animated, desktop-embedded Wayland widget for tracking tasks and calendar events seamlessly. Built for Hyprland and Quickshell with a native Catppuccin Mocha palette.
+
+<p align="center">
+  <img src="assets/demo.gif" alt="Quickshell Todo Widget Demo" width="600" style="border-radius: 12px;" />
+</p>
 
 ## Features
-- **Premium Animations**: Fluid entry/exit transitions, magnetic hover scaling, and spinning checkbox completions.
-- **Wayland Native**: Built with [Quickshell](https://outfoxxed.me/quickshell) to natively anchor to your desktop layer behind your active windows (or above them if configured).
-- **Dual Views**:
-  - **Tasks**: Track 'Today' and 'Daily' habits seamlessly.
-  - **Calendar**: Syncs local events alongside remote `.ics` (Google Calendar) links.
-- **Catppuccin Styled**: Deeply integrated styling out of the box.
+- **Hold & Slide to Delete**: Native swipe gestures with red reveal and spring snapback animations.
+- **Keyboard Fast**: Press Enter to instantly add tasks and calendar events.
+- **Date & Time Picker**: Clickable trigger button opening an expandable inline drawer with upcoming date chips and time slots.
+- **Dual Views & Icon Filters**:
+  - **Tasks**: Filter by All, Active, Completed, or Daily recurring habits.
+  - **Calendar**: Filter by Today, Upcoming, and All events with one-click Google Calendar sync.
+- **Wayland Native**: Runs on `WlrLayer.Bottom` directly on your desktop wallpaper behind active windows with zero-lag pointer handlers.
+- **Catppuccin Styled**: Integrated Mocha tonal palette with Material Symbols Rounded icons.
 
 ## Requirements
 - [Quickshell 0.3+](https://github.com/outfoxxed/quickshell)
