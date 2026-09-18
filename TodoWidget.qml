@@ -172,6 +172,7 @@ PanelWindow {
     }
 
     function deleteTask(rawIndex) {
+        console.log("deleteTask triggered! rawIndex: " + rawIndex)
         if (rawIndex >= 0 && rawIndex < masterList.length) {
             var temp = masterList
             temp.splice(rawIndex, 1)
@@ -182,6 +183,7 @@ PanelWindow {
     }
 
     function addTask(text, type) {
+        console.log("addTask triggered! text: " + text + " type: " + type)
         var temp = masterList
         temp.push({"text": text, "done": false, "type": type})
         masterList = temp
@@ -344,8 +346,10 @@ PanelWindow {
                                 color: root.currentMainTab === "tasks" ? root.colTextOnPrimary : root.colTextVariant
                             }
                             Rectangle {
-                                width: 18
-                                height: 18
+                                implicitWidth: 18
+                                    implicitHeight: 18
+                                    width: 18
+                                    height: 18
                                 radius: 9
                                 color: root.currentMainTab === "tasks" ? root.colTextOnPrimary : root.colSurfaceHigh
                                 Text {
@@ -386,8 +390,10 @@ PanelWindow {
                                 color: root.currentMainTab === "agenda" ? "#2a1526" : root.colTextVariant
                             }
                             Rectangle {
-                                width: 18
-                                height: 18
+                                implicitWidth: 18
+                                    implicitHeight: 18
+                                    width: 18
+                                    height: 18
                                 radius: 9
                                 color: root.currentMainTab === "agenda" ? "#2a1526" : root.colSurfaceHigh
                                 Text {
@@ -533,6 +539,8 @@ PanelWindow {
                                 spacing: 10
 
                                 Rectangle {
+                                    implicitWidth: 20
+                                    implicitHeight: 20
                                     width: 20
                                     height: 20
                                     radius: 6
@@ -556,6 +564,8 @@ PanelWindow {
                                 }
 
                                 Rectangle {
+                                    implicitWidth: 20
+                                    implicitHeight: 20
                                     width: 20
                                     height: 20
                                     radius: 4
@@ -589,6 +599,8 @@ PanelWindow {
                                 }
 
                                 Rectangle {
+                                    implicitWidth: 22
+                                    implicitHeight: 22
                                     width: 22
                                     height: 22
                                     radius: 6
@@ -659,8 +671,10 @@ PanelWindow {
                         }
 
                         Rectangle {
-                            width: 36
-                            height: 36
+                            implicitWidth: 36
+                                    implicitHeight: 36
+                                    width: 36
+                                    height: 36
                             radius: 9
                             color: root.nextTaskIsDaily ? root.colTertiary : "transparent"
                             border.color: root.nextTaskIsDaily ? "transparent" : root.colOutlineVariant
@@ -681,8 +695,10 @@ PanelWindow {
                         }
 
                         Rectangle {
-                            width: 36
-                            height: 36
+                            implicitWidth: 36
+                                    implicitHeight: 36
+                                    width: 36
+                                    height: 36
                             radius: 9
                             color: root.nextTaskIsDaily ? root.colTertiary : root.colPrimary
                             Text {
@@ -766,8 +782,10 @@ PanelWindow {
 
                         // Sync button (runs calendar_sync.py)
                         Rectangle {
-                            width: 26
-                            height: 26
+                            implicitWidth: 26
+                                    implicitHeight: 26
+                                    width: 26
+                                    height: 26
                             radius: 8
                             color: syncMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh
 
@@ -845,6 +863,8 @@ PanelWindow {
 
                                 // Time pill
                                 Rectangle {
+                                    implicitWidth: 72
+                                    implicitHeight: 28
                                     width: 72
                                     height: 28
                                     radius: 6
@@ -893,6 +913,8 @@ PanelWindow {
                                 // Delete option for local events
                                 Rectangle {
                                     visible: model.source === "local"
+                                    implicitWidth: 20
+                                    implicitHeight: 20
                                     width: 20
                                     height: 20
                                     radius: 6
@@ -972,8 +994,10 @@ PanelWindow {
 
                         TextField {
                             id: eventTimeInput
-                            width: 80
-                            height: 36
+                            implicitWidth: 80
+                                    implicitHeight: 36
+                                    width: 80
+                                    height: 36
                             placeholderText: "10:00 AM"
                             placeholderTextColor: root.colOutline
                             color: root.colText
@@ -993,8 +1017,10 @@ PanelWindow {
 
                         Rectangle {
                             id: addEventBtn
-                            width: 36
-                            height: 36
+                            implicitWidth: 36
+                                    implicitHeight: 36
+                                    width: 36
+                                    height: 36
                             radius: 9
                             color: root.colTertiary
 
