@@ -26,9 +26,14 @@ PanelWindow {
     }
 
     implicitWidth: 360
-    implicitHeight: Math.min(640, cardLayout.implicitHeight + 28)
+    implicitHeight: 640
 
     color: "transparent"
+
+    mask: Region {
+        width: mainCard.width
+        height: mainCard.height
+    }
 
     // Caelestia Theme Palette (Catppuccin Mocha Tonalspot)
     readonly property color colSurface: "#1e1d22"
@@ -307,11 +312,23 @@ PanelWindow {
     // Outer Shell Card
     Rectangle {
         id: mainCard
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: Math.min(620, cardLayout.implicitHeight + 28)
         radius: 20
         color: root.colSurface
         border.color: root.colOutlineVariant
         border.width: 1
+        clip: true
+
+        Behavior on height {
+            NumberAnimation {
+                duration: 350
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+            }
+        }
 
         ColumnLayout {
             id: cardLayout
@@ -451,10 +468,6 @@ PanelWindow {
                 implicitHeight: (root.currentMainTab === "tasks" ? tasksView.implicitHeight : agendaView.implicitHeight)
                 clip: true
 
-                Behavior on implicitHeight {
-                    NumberAnimation { duration: 300; easing.type: Easing.OutQuart }
-                }
-
                 // ------------------------------------------
                 // View 1: Tasks (Today / Daily)
                 // ------------------------------------------
@@ -467,10 +480,14 @@ PanelWindow {
                     x: root.currentMainTab === "tasks" ? 0 : -slidingContainer.width
 
                     Behavior on x {
-                        NumberAnimation { duration: 320; easing.type: Easing.OutQuart }
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+                        }
                     }
                     Behavior on opacity {
-                        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
                     }
 
                     // Filter Icon Pills: All | Active | Done | Daily
@@ -887,10 +904,14 @@ PanelWindow {
                     x: root.currentMainTab === "agenda" ? 0 : slidingContainer.width
 
                     Behavior on x {
-                        NumberAnimation { duration: 320; easing.type: Easing.OutQuart }
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+                        }
                     }
                     Behavior on opacity {
-                        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
                     }
 
                     // Filter row: Today | Upcoming | All + Sync Button (Icons)
@@ -1281,10 +1302,14 @@ PanelWindow {
                             clip: true
 
                             Behavior on Layout.preferredHeight {
-                                NumberAnimation { duration: 320; easing.type: Easing.OutQuart }
+                                NumberAnimation {
+                                    duration: 320
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+                                }
                             }
                             Behavior on opacity {
-                                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
                             }
 
                             ColumnLayout {
@@ -1292,8 +1317,19 @@ PanelWindow {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.top: parent.top
-                                anchors.margins: 8
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
+                                anchors.bottomMargin: 8
+                                anchors.topMargin: root.dateTimeSelectorOpen ? 8 : -16
                                 spacing: 8
+
+                                Behavior on anchors.topMargin {
+                                    NumberAnimation {
+                                        duration: 320
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+                                    }
+                                }
 
                                 // --- Date Header ---
                                 RowLayout {
