@@ -66,7 +66,7 @@ PanelWindow {
     // --- Process Handlers for Tasks ---
     Process {
         id: initFile
-        command: ["bash", "-c", "mkdir -p " + Quickshell.env.HOME + "/.local/state && touch " + Quickshell.env.HOME + "/.local/state/todos.json"]
+        command: ["bash", "-c", "mkdir -p ~/.local/state && touch ~/.local/state/todos.json"]
         running: true
         onExited: {
             readProc.running = true
@@ -76,7 +76,7 @@ PanelWindow {
 
     Process {
         id: readProc
-        command: ["bash", "-c", "cat " + Quickshell.env.HOME + "/.local/state/todos.json | tr -d '\n'"]
+        command: ["bash", "-c", "cat ~/.local/state/todos.json | tr -d '\n'"]
         stdout: SplitParser {
             onRead: data => {
                 if (data && data.trim().length > 0) {
@@ -130,7 +130,7 @@ PanelWindow {
     Process {
         id: writeProc
         property string content: "{}"
-        command: ["bash", "-c", "cat << 'EOF' > " + Quickshell.env.HOME + "/.local/state/todos.json\n" + content + "\nEOF"]
+        command: ["bash", "-c", "cat << 'EOF' > ~/.local/state/todos.json\n" + content + "\nEOF"]
     }
 
     function saveTodos() {
@@ -209,7 +209,7 @@ PanelWindow {
 
     Process {
         id: readEventsProc
-        command: ["bash", "-c", "cat " + Quickshell.env.HOME + "/.local/state/calendar_events.json | tr -d '\n'"]
+        command: ["bash", "-c", "cat ~/.local/state/calendar_events.json | tr -d '\n'"]
         stdout: SplitParser {
             onRead: data => {
                 if (data && data.trim().length > 0) {
@@ -230,14 +230,14 @@ PanelWindow {
         id: addLocalEventProc
         property string eventTitle: ""
         property string eventTime: ""
-        command: ["python3", "-c", "import json, os, datetime; f='" + Quickshell.env.HOME + "/.local/state/calendar_local.json'; data=json.load(open(f)) if os.path.exists(f) else []; data.append({'id': int(datetime.datetime.now().timestamp()), 'title': '" + eventTitle + "', 'date': datetime.datetime.now().strftime('%Y-%m-%d'), 'time': '" + eventTime + "'}); json.dump(data, open(f, 'w'), indent=2)"]
+        command: ["python3", "-c", "import json, os, datetime; f=os.path.expanduser('~/.local/state/calendar_local.json'); data=json.load(open(f)) if os.path.exists(f) else []; data.append({'id': int(datetime.datetime.now().timestamp()), 'title': '" + eventTitle + "', 'date': datetime.datetime.now().strftime('%Y-%m-%d'), 'time': '" + eventTime + "'}); json.dump(data, open(f, 'w'), indent=2)"]
         onExited: syncCalendarProc.running = true
     }
 
     Process {
         id: deleteLocalEventProc
         property int eventId: 0
-        command: ["python3", "-c", "import json, os; f='" + Quickshell.env.HOME + "/.local/state/calendar_local.json'; data=[x for x in json.load(open(f)) if x.get('id') != " + eventId + "] if os.path.exists(f) else []; json.dump(data, open(f, 'w'), indent=2)"]
+        command: ["python3", "-c", "import json, os; f=os.path.expanduser('~/.local/state/calendar_local.json'); data=[x for x in json.load(open(f)) if x.get('id') != " + eventId + "] if os.path.exists(f) else []; json.dump(data, open(f, 'w'), indent=2)"]
         onExited: syncCalendarProc.running = true
     }
 
