@@ -57,6 +57,8 @@ PanelWindow {
     // Agenda State
     property string agendaFilter: "today" // "today" | "upcoming" | "all"
     property var allEvents: []
+    property string selectedEventTime: "All Day"
+    property bool timeSelectorOpen: false
 
     function getTodayString() {
         var d = new Date()
@@ -740,7 +742,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 36
                             placeholderText: root.nextTaskIsDaily ? "Add daily habit... (Press Enter)" : "Add task... (Press Enter)"
-                            placeholderTextColor: root.colOutline
+                            placeholderTextColor: Qt.alpha(root.colTextVariant, 0.7)
                             color: root.colText
                             font.pixelSize: 12
                             verticalAlignment: TextInput.AlignVCenter
@@ -1075,61 +1077,107 @@ PanelWindow {
                     }
 
                     // Quick Add Event Field (Press Enter to Add!)
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 36
                         spacing: 8
 
-                        function triggerAddEvent() {
-                            if (eventTitleInput.text.trim().length > 0) {
-                                addLocalEventProc.eventTitle = eventTitleInput.text.trim()
-                                addLocalEventProc.eventTime = eventTimeInput.text.trim() || "All Day"
-                                addLocalEventProc.running = true
-                                eventTitleInput.text = ""
-                                eventTimeInput.text = ""
-                            }
-                        }
-
-                        TextField {
-                            id: eventTitleInput
+                        RowLayout {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 36
-                            placeholderText: "Event title... (Press Enter)"
-                            placeholderTextColor: root.colOutline
-                            color: root.colText
-                            font.pixelSize: 12
-                            verticalAlignment: TextInput.AlignVCenter
+                            spacing: 8
 
-                            background: Rectangle {
-                                color: root.colSurfaceHigh
-                                radius: 10
-                                border.color: eventTitleInput.activeFocus ? root.colTertiary : root.colOutlineVariant
-                                border.width: 1
+                            function triggerAddEvent() {
+                                if (eventTitleInput.text.trim().length > 0) {
+                                    addLocalEventProc.eventTitle = eventTitleInput.text.trim()
+                                    addLocalEventProc.eventTime = root.selectedEventTime
+                                    addLocalEventProc.running = true
+                                    eventTitleInput.text = ""
+                                    root.selectedEventTime = "All Day"
+                                    root.timeSelectorOpen = false
+                                }
                             }
-                            padding: 10
 
-                            onAccepted: parent.triggerAddEvent()
+                            TextField {
+                                id: eventTitleInput
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 36
+                                placeholderText: "Event title... (Press Enter)"
+                                placeholderTextColor: Qt.alpha(root.colTextVariant, 0.7)
+                                color: root.colText
+                                font.pixelSize: 12
+                                verticalAlignment: TextInput.AlignVCenter
+
+                                background: Rectangle {
+                                    color: root.colSurfaceHigh
+                                    radius: 10
+                                    border.color: eventTitleInput.activeFocus ? root.colTertiary : root.colOutlineVariant
+                                    border.width: 1
+                                }
+                                padding: 10
+
+                                onAccepted: parent.triggerAddEvent()
+                            }
+
+                            Rectangle {
+                                Layout.preferredWidth: 85
+                                Layout.preferredHeight: 36
+                                radius: 10
+                                color: root.timeSelectorOpen ? root.colSurfaceHighest : root.colSurfaceHigh
+                                border.color: root.timeSelectorOpen ? root.colTertiary : root.colOutlineVariant
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: root.selectedEventTime
+                                    font.pixelSize: 11
+                                    color: root.colText
+                                }
+                                TapHandler {
+                                    onTapped: {
+                                        root.timeSelectorOpen = !root.timeSelectorOpen
+                                    }
+                                }
+                                HoverHandler {
+                                    cursorShape: Qt.PointingHandCursor
+                                }
+                            }
                         }
 
-                        TextField {
-                            id: eventTimeInput
-                            Layout.preferredWidth: 85
-                            Layout.preferredHeight: 36
-                            placeholderText: "Time (opt)"
-                            placeholderTextColor: root.colOutline
-                            color: root.colText
-                            font.pixelSize: 11
-                            verticalAlignment: TextInput.AlignVCenter
+                        // Inline time selector
+                        GridLayout {
+                            Layout.fillWidth: true
+                            visible: root.timeSelectorOpen
+                            columns: 3
+                            columnSpacing: 6
+                            rowSpacing: 6
 
-                            background: Rectangle {
-                                color: root.colSurfaceHigh
-                                radius: 10
-                                border.color: eventTimeInput.activeFocus ? root.colTertiary : root.colOutlineVariant
-                                border.width: 1
+                            Repeater {
+                                model: ["All Day", "09:00 AM", "12:00 PM", "03:00 PM", "06:00 PM", "08:00 PM"]
+                                delegate: Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 28
+                                    radius: 8
+                                    color: root.selectedEventTime === modelData ? root.colTertiary : root.colSurfaceHigh
+                                    border.color: root.selectedEventTime === modelData ? root.colTertiary : root.colOutlineVariant
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData
+                                        font.pixelSize: 11
+                                        color: root.selectedEventTime === modelData ? "#2a1526" : root.colText
+                                        font.bold: root.selectedEventTime === modelData
+                                    }
+                                    TapHandler {
+                                        onTapped: {
+                                            root.selectedEventTime = modelData
+                                        }
+                                    }
+                                    HoverHandler {
+                                        cursorShape: Qt.PointingHandCursor
+                                    }
+                                }
                             }
-                            padding: 8
-
-                            onAccepted: parent.triggerAddEvent()
                         }
                     }
                 }
