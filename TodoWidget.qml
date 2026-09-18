@@ -57,12 +57,30 @@ PanelWindow {
     // Agenda State
     property string agendaFilter: "today" // "today" | "upcoming" | "all"
     property var allEvents: []
+    property string selectedEventDate: getTodayString()
+    property string selectedEventDateLabel: "Today"
     property string selectedEventTime: "All Day"
-    property bool timeSelectorOpen: false
+    property bool dateTimeSelectorOpen: false
 
     function getTodayString() {
         var d = new Date()
         return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0')
+    }
+
+    function getUpcomingDays() {
+        var list = []
+        var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        var now = new Date()
+        for (var i = 0; i < 8; i++) {
+            var d = new Date(now.getTime() + i * 24 * 60 * 60 * 1000)
+            var yyyy = d.getFullYear()
+            var mm = String(d.getMonth() + 1).padStart(2, '0')
+            var dd = String(d.getDate()).padStart(2, '0')
+            var iso = yyyy + "-" + mm + "-" + dd
+            var label = i === 0 ? "Today" : (i === 1 ? "Tomorrow" : (dayNames[d.getDay()] + " " + d.getDate()))
+            list.push({ "iso": iso, "label": label })
+        }
+        return list
     }
 
     // --- Process Handlers for Tasks ---
@@ -151,6 +169,7 @@ PanelWindow {
             var matches = true
             if (activeFilter === "active" && item.done) matches = false
             if (activeFilter === "done" && !item.done) matches = false
+            if (activeFilter === "daily" && item.type !== "daily") matches = false
 
             if (matches) {
                 taskModel.append({
@@ -205,7 +224,7 @@ PanelWindow {
     // --- Process Handlers for Agenda & Google Calendar ---
     Process {
         id: syncCalendarProc
-        command: ["python3", "/home/zius/Projects/playground/calendar_sync.py"]
+        command: ["bash", "-c", "for p in \"$HOME/.config/quickshell-todo-widget/calendar_sync.py\" \"/home/zius/Projects/playground/calendar_sync.py\" \"./calendar_sync.py\"; do if [ -f \"$p\" ]; then python3 \"$p\"; exit 0; fi; done"]
         onExited: readEventsProc.running = true
     }
 
@@ -231,8 +250,15 @@ PanelWindow {
     Process {
         id: addLocalEventProc
         property string eventTitle: ""
+        property string eventDate: ""
         property string eventTime: ""
-        command: ["python3", "-c", "import json, os, datetime; f=os.path.expanduser('~/.local/state/calendar_local.json'); data=json.load(open(f)) if os.path.exists(f) else []; data.append({'id': int(datetime.datetime.now().timestamp()), 'title': '" + eventTitle + "', 'date': datetime.datetime.now().strftime('%Y-%m-%d'), 'time': '" + eventTime + "'}); json.dump(data, open(f, 'w'), indent=2)"]
+        command: [
+            "python3", "-c",
+            "import json, os, sys, datetime; f=os.path.expanduser('~/.local/state/calendar_local.json'); data=json.load(open(f)) if os.path.exists(f) else []; data.append({'id': int(datetime.datetime.now().timestamp()), 'title': sys.argv[1], 'date': sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else datetime.datetime.now().strftime('%Y-%m-%d'), 'time': sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] else 'All Day'}); json.dump(data, open(f, 'w'), indent=2)",
+            eventTitle,
+            eventDate,
+            eventTime
+        ]
         onExited: syncCalendarProc.running = true
     }
 
@@ -443,39 +469,51 @@ PanelWindow {
                         NumberAnimation { duration: 180 }
                     }
 
-                    // Filter Pills
+                    // Filter Icon Pills: All | Active | Done | Daily
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 6
 
                         Repeater {
                             model: [
-                                { "key": "all", "label": "All" },
-                                { "key": "active", "label": "Active" },
-                                { "key": "done", "label": "Done" }
+                                { "key": "all", "icon": "format_list_bulleted", "label": "All Tasks" },
+                                { "key": "active", "icon": "radio_button_unchecked", "label": "Active Tasks" },
+                                { "key": "done", "icon": "check_circle", "label": "Done Tasks" },
+                                { "key": "daily", "icon": "autorenew", "label": "Daily Habits" }
                             ]
                             delegate: Rectangle {
                                 Layout.fillWidth: true
-                                height: 24
-                                radius: 7
-                                color: root.activeFilter === modelData.key ? root.colSurfaceHighest : "transparent"
-                                border.color: root.activeFilter === modelData.key ? root.colOutline : "transparent"
+                                height: 28
+                                radius: 8
+                                color: root.activeFilter === modelData.key ? root.colSurfaceHighest : (filterHover.hovered ? root.colSurfaceHigh : "transparent")
+                                border.color: root.activeFilter === modelData.key ? root.colPrimary : "transparent"
                                 border.width: 1
+
+                                Behavior on color { ColorAnimation { duration: 120 } }
+                                Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                                ToolTip.visible: filterHover.hovered
+                                ToolTip.text: modelData.label
+                                ToolTip.delay: 300
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: modelData.label
-                                    font.pixelSize: 11
-                                    font.weight: root.activeFilter === modelData.key ? Font.Medium : Font.Normal
-                                    color: root.activeFilter === modelData.key ? root.colText : root.colOutline
+                                    text: modelData.icon
+                                    font.family: "Material Symbols Rounded"
+                                    font.pixelSize: 15
+                                    color: root.activeFilter === modelData.key ? root.colPrimary : (filterHover.hovered ? root.colText : root.colOutline)
                                 }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
+
+                                TapHandler {
+                                    onTapped: {
                                         root.activeFilter = modelData.key
                                         root.syncTaskModel()
                                     }
+                                }
+
+                                HoverHandler {
+                                    id: filterHover
+                                    cursorShape: Qt.PointingHandCursor
                                 }
                             }
                         }
@@ -725,7 +763,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: root.activeFilter === "done" 
                                 ? "No completed tasks yet" 
-                                : (root.activeFilter === "active" ? "All done! ✦" : "No tasks added")
+                                : (root.activeFilter === "active" ? "All done! ✦" : (root.activeFilter === "daily" ? "No daily habits added yet" : "No tasks added"))
                             font.pixelSize: 12
                             color: root.colOutline
                         }
@@ -809,66 +847,82 @@ PanelWindow {
                         NumberAnimation { duration: 180 }
                     }
 
-                    // Filter row: Today | Upcoming | All + Sync Button
+                    // Filter row: Today | Upcoming | All + Sync Button (Icons)
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 6
 
                         Repeater {
                             model: [
-                                { "key": "today", "label": "Today" },
-                                { "key": "upcoming", "label": "Upcoming" },
-                                { "key": "all", "label": "All" }
+                                { "key": "today", "icon": "today", "label": "Today's Events" },
+                                { "key": "upcoming", "icon": "event_upcoming", "label": "Upcoming Events" },
+                                { "key": "all", "icon": "calendar_month", "label": "All Events" }
                             ]
                             delegate: Rectangle {
                                 Layout.fillWidth: true
-                                height: 26
+                                height: 28
                                 radius: 8
-                                color: root.agendaFilter === modelData.key ? root.colTertiary : root.colSurfaceHigh
+                                color: root.agendaFilter === modelData.key ? root.colTertiary : (calFilterHover.hovered ? root.colSurfaceHigh : "transparent")
+                                border.color: root.agendaFilter === modelData.key ? root.colTertiary : "transparent"
+                                border.width: 1
 
                                 Behavior on color { ColorAnimation { duration: 120 } }
+                                Behavior on border.color { ColorAnimation { duration: 120 } }
 
-                                RowLayout {
+                                ToolTip.visible: calFilterHover.hovered
+                                ToolTip.text: modelData.label
+                                ToolTip.delay: 300
+
+                                Text {
                                     anchors.centerIn: parent
-                                    spacing: 4
-                                    Text {
-                                        text: modelData.label
-                                        font.pixelSize: 11
-                                        font.bold: root.agendaFilter === modelData.key
-                                        color: root.agendaFilter === modelData.key ? "#2a1526" : root.colText
-                                    }
+                                    text: modelData.icon
+                                    font.family: "Material Symbols Rounded"
+                                    font.pixelSize: 15
+                                    color: root.agendaFilter === modelData.key ? "#2a1526" : (calFilterHover.hovered ? root.colText : root.colTextVariant)
                                 }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
+
+                                TapHandler {
+                                    onTapped: {
                                         root.agendaFilter = modelData.key
                                         root.syncAgendaModel()
                                     }
+                                }
+
+                                HoverHandler {
+                                    id: calFilterHover
+                                    cursorShape: Qt.PointingHandCursor
                                 }
                             }
                         }
 
                         // Sync button
                         Rectangle {
-                            Layout.preferredWidth: 26
-                            Layout.preferredHeight: 26
+                            Layout.preferredWidth: 28
+                            Layout.preferredHeight: 28
                             radius: 8
-                            color: syncMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh
+                            color: syncHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh
+                            border.color: root.colOutlineVariant
+                            border.width: 1
+
+                            ToolTip.visible: syncHover.hovered
+                            ToolTip.text: "Sync Calendar"
+                            ToolTip.delay: 300
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "↻"
-                                font.pixelSize: 14
-                                font.bold: true
+                                text: "sync"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 16
                                 color: root.colTertiary
                             }
-                            MouseArea {
-                                id: syncMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
+
+                            TapHandler {
+                                onTapped: syncCalendarProc.running = true
+                            }
+
+                            HoverHandler {
+                                id: syncHover
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: syncCalendarProc.running = true
                             }
                         }
                     }
@@ -1089,11 +1143,14 @@ PanelWindow {
                             function triggerAddEvent() {
                                 if (eventTitleInput.text.trim().length > 0) {
                                     addLocalEventProc.eventTitle = eventTitleInput.text.trim()
-                                    addLocalEventProc.eventTime = root.selectedEventTime
+                                    addLocalEventProc.eventDate = root.selectedEventDate || root.getTodayString()
+                                    addLocalEventProc.eventTime = root.selectedEventTime || "All Day"
                                     addLocalEventProc.running = true
                                     eventTitleInput.text = ""
+                                    root.selectedEventDate = root.getTodayString()
+                                    root.selectedEventDateLabel = "Today"
                                     root.selectedEventTime = "All Day"
-                                    root.timeSelectorOpen = false
+                                    root.dateTimeSelectorOpen = false
                                 }
                             }
 
@@ -1118,24 +1175,40 @@ PanelWindow {
                                 onAccepted: parent.triggerAddEvent()
                             }
 
+                            // Date & Time Selector Trigger Button
                             Rectangle {
-                                Layout.preferredWidth: 85
+                                Layout.preferredWidth: 120
                                 Layout.preferredHeight: 36
                                 radius: 10
-                                color: root.timeSelectorOpen ? root.colSurfaceHighest : root.colSurfaceHigh
-                                border.color: root.timeSelectorOpen ? root.colTertiary : root.colOutlineVariant
+                                color: root.dateTimeSelectorOpen ? root.colSurfaceHighest : root.colSurfaceHigh
+                                border.color: root.dateTimeSelectorOpen ? root.colTertiary : root.colOutlineVariant
                                 border.width: 1
 
-                                Text {
+                                Behavior on color { ColorAnimation { duration: 120 } }
+                                Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                                RowLayout {
                                     anchors.centerIn: parent
-                                    text: root.selectedEventTime
-                                    font.pixelSize: 11
-                                    color: root.colText
-                                }
-                                TapHandler {
-                                    onTapped: {
-                                        root.timeSelectorOpen = !root.timeSelectorOpen
+                                    spacing: 4
+
+                                    Text {
+                                        text: "event"
+                                        font.family: "Material Symbols Rounded"
+                                        font.pixelSize: 15
+                                        color: root.dateTimeSelectorOpen ? root.colTertiary : root.colTextVariant
                                     }
+
+                                    Text {
+                                        text: root.selectedEventDateLabel + " · " + (root.selectedEventTime === "All Day" ? "All Day" : root.selectedEventTime.replace(":00", ""))
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: root.dateTimeSelectorOpen ? root.colTertiary : root.colText
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                TapHandler {
+                                    onTapped: root.dateTimeSelectorOpen = !root.dateTimeSelectorOpen
                                 }
                                 HoverHandler {
                                     cursorShape: Qt.PointingHandCursor
@@ -1143,38 +1216,151 @@ PanelWindow {
                             }
                         }
 
-                        // Inline time selector
-                        GridLayout {
+                        // Expandable Date & Time selector drawer
+                        Rectangle {
                             Layout.fillWidth: true
-                            visible: root.timeSelectorOpen
-                            columns: 3
-                            columnSpacing: 6
-                            rowSpacing: 6
+                            Layout.preferredHeight: dtSelectorCol.implicitHeight + 16
+                            visible: root.dateTimeSelectorOpen
+                            radius: 12
+                            color: root.colSurfaceLow
+                            border.color: root.colOutlineVariant
+                            border.width: 1
+                            clip: true
 
-                            Repeater {
-                                model: ["All Day", "09:00 AM", "12:00 PM", "03:00 PM", "06:00 PM", "08:00 PM"]
-                                delegate: Rectangle {
+                            ColumnLayout {
+                                id: dtSelectorCol
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.margins: 8
+                                spacing: 8
+
+                                // --- Date Header ---
+                                RowLayout {
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: 28
-                                    radius: 8
-                                    color: root.selectedEventTime === modelData ? root.colTertiary : root.colSurfaceHigh
-                                    border.color: root.selectedEventTime === modelData ? root.colTertiary : root.colOutlineVariant
-                                    border.width: 1
-
+                                    spacing: 6
                                     Text {
-                                        anchors.centerIn: parent
-                                        text: modelData
-                                        font.pixelSize: 11
-                                        color: root.selectedEventTime === modelData ? "#2a1526" : root.colText
-                                        font.bold: root.selectedEventTime === modelData
+                                        text: "calendar_today"
+                                        font.family: "Material Symbols Rounded"
+                                        font.pixelSize: 13
+                                        color: root.colTertiary
                                     }
-                                    TapHandler {
-                                        onTapped: {
-                                            root.selectedEventTime = modelData
+                                    Text {
+                                        text: "Date:"
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: root.colTextVariant
+                                    }
+                                    Text {
+                                        text: root.selectedEventDateLabel
+                                        font.pixelSize: 11
+                                        color: root.colTertiary
+                                        font.bold: true
+                                    }
+                                }
+
+                                // Date Chips: 8 upcoming days
+                                GridLayout {
+                                    Layout.fillWidth: true
+                                    columns: 4
+                                    columnSpacing: 5
+                                    rowSpacing: 5
+
+                                    Repeater {
+                                        model: root.getUpcomingDays()
+                                        delegate: Rectangle {
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 26
+                                            radius: 7
+                                            color: root.selectedEventDate === modelData.iso ? root.colTertiary : root.colSurfaceHigh
+                                            border.color: root.selectedEventDate === modelData.iso ? root.colTertiary : root.colOutlineVariant
+                                            border.width: 1
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData.label
+                                                font.pixelSize: 10
+                                                color: root.selectedEventDate === modelData.iso ? "#2a1526" : root.colText
+                                                font.bold: root.selectedEventDate === modelData.iso
+                                            }
+
+                                            TapHandler {
+                                                onTapped: {
+                                                    root.selectedEventDate = modelData.iso
+                                                    root.selectedEventDateLabel = modelData.label
+                                                }
+                                            }
+                                            HoverHandler {
+                                                cursorShape: Qt.PointingHandCursor
+                                            }
                                         }
                                     }
-                                    HoverHandler {
-                                        cursorShape: Qt.PointingHandCursor
+                                }
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 1
+                                    color: root.colOutlineVariant
+                                }
+
+                                // --- Time Header ---
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 6
+                                    Text {
+                                        text: "schedule"
+                                        font.family: "Material Symbols Rounded"
+                                        font.pixelSize: 13
+                                        color: root.colTertiary
+                                    }
+                                    Text {
+                                        text: "Time:"
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: root.colTextVariant
+                                    }
+                                    Text {
+                                        text: root.selectedEventTime
+                                        font.pixelSize: 11
+                                        color: root.colTertiary
+                                        font.bold: true
+                                    }
+                                }
+
+                                // Time Chips
+                                GridLayout {
+                                    Layout.fillWidth: true
+                                    columns: 3
+                                    columnSpacing: 5
+                                    rowSpacing: 5
+
+                                    Repeater {
+                                        model: ["All Day", "09:00 AM", "12:00 PM", "03:00 PM", "06:00 PM", "08:00 PM"]
+                                        delegate: Rectangle {
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 26
+                                            radius: 7
+                                            color: root.selectedEventTime === modelData ? root.colTertiary : root.colSurfaceHigh
+                                            border.color: root.selectedEventTime === modelData ? root.colTertiary : root.colOutlineVariant
+                                            border.width: 1
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData
+                                                font.pixelSize: 10
+                                                color: root.selectedEventTime === modelData ? "#2a1526" : root.colText
+                                                font.bold: root.selectedEventTime === modelData
+                                            }
+
+                                            TapHandler {
+                                                onTapped: {
+                                                    root.selectedEventTime = modelData
+                                                }
+                                            }
+                                            HoverHandler {
+                                                cursorShape: Qt.PointingHandCursor
+                                            }
+                                        }
                                     }
                                 }
                             }
