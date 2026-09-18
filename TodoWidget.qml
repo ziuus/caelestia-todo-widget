@@ -26,7 +26,21 @@ PanelWindow {
     }
 
     implicitWidth: 360
-    implicitHeight: Math.min(640, mainCard.implicitHeight) // Restore dynamic sizing!
+    implicitHeight: Math.min(640, mainCard.implicitHeight)
+    MouseArea {
+        anchors.fill: parent
+        propagateComposedEvents: true
+        acceptedButtons: Qt.AllButtons
+        onPressed: (mouse) => {
+            console.log("DEBUG: GLOBAL PRESSED AT x=" + mouse.x + " y=" + mouse.y)
+            mouse.accepted = false
+        }
+        onReleased: (mouse) => {
+            console.log("DEBUG: GLOBAL RELEASED AT x=" + mouse.x + " y=" + mouse.y)
+            mouse.accepted = false
+        }
+    }
+ // Restore dynamic sizing!
 
     color: "transparent"
 
@@ -651,7 +665,7 @@ PanelWindow {
                                 Button {
                                     Layout.preferredWidth: 22
                                     Layout.preferredHeight: 22
-                                    onClicked: root.deleteTask(model.rawIndex)
+                                    onClicked: { console.log("DEBUG: X BUTTON CLICKED for index " + model.rawIndex); root.deleteTask(model.rawIndex); }
                                     background: Rectangle {
                                         radius: 6
                                         color: parent.hovered ? root.colSurfaceHighest : "transparent"
@@ -743,6 +757,7 @@ PanelWindow {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
                             onClicked: {
+                                console.log("DEBUG: + BUTTON CLICKED! input text is: '" + inputField.text + "'")
                                 if (inputField.text.trim().length > 0) {
                                     root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
                                     inputField.text = ""
