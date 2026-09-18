@@ -340,10 +340,10 @@ PanelWindow {
                     color: root.currentMainTab === "tasks" ? root.colPrimary : root.colTertiary
 
                     Behavior on x {
-                        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 280; easing.type: Easing.OutBack; easing.overshoot: 0.8 }
                     }
                     Behavior on color {
-                        ColorAnimation { duration: 180 }
+                        ColorAnimation { duration: 220; easing.type: Easing.OutCubic }
                     }
                 }
 
@@ -451,6 +451,10 @@ PanelWindow {
                 implicitHeight: (root.currentMainTab === "tasks" ? tasksView.implicitHeight : agendaView.implicitHeight)
                 clip: true
 
+                Behavior on implicitHeight {
+                    NumberAnimation { duration: 300; easing.type: Easing.OutQuart }
+                }
+
                 // ------------------------------------------
                 // View 1: Tasks (Today / Daily)
                 // ------------------------------------------
@@ -463,10 +467,10 @@ PanelWindow {
                     x: root.currentMainTab === "tasks" ? 0 : -slidingContainer.width
 
                     Behavior on x {
-                        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 320; easing.type: Easing.OutQuart }
                     }
                     Behavior on opacity {
-                        NumberAnimation { duration: 180 }
+                        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
                     }
 
                     // Filter Icon Pills: All | Active | Done | Daily
@@ -643,6 +647,11 @@ PanelWindow {
                                 color: taskHover.hovered ? root.colSurfaceHighest : (model.done ? root.colSurfaceLow : root.colSurfaceHigh)
                                 border.color: taskHover.hovered ? root.colOutline : (model.done ? "transparent" : root.colOutlineVariant)
                                 border.width: 1
+                                scale: taskHover.hovered ? 1.008 : 1.0
+
+                                Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                                Behavior on border.color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                                Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutQuad } }
 
                                 DragHandler {
                                     id: dragHandler
@@ -667,15 +676,16 @@ PanelWindow {
                                     target: taskCard
                                     property: "x"
                                     to: 0
-                                    duration: 220
+                                    duration: 320
                                     easing.type: Easing.OutBack
+                                    easing.overshoot: 1.1
                                 }
 
                                 SequentialAnimation {
                                     id: deleteAnim
                                     ParallelAnimation {
-                                        NumberAnimation { target: taskCard; property: "x"; to: -taskItemWrapper.width; duration: 180; easing.type: Easing.InQuad }
-                                        NumberAnimation { target: taskCard; property: "opacity"; to: 0; duration: 180 }
+                                        NumberAnimation { target: taskCard; property: "x"; to: -taskItemWrapper.width; duration: 220; easing.type: Easing.InQuad }
+                                        NumberAnimation { target: taskCard; property: "opacity"; to: 0; duration: 200 }
                                     }
                                     ScriptAction {
                                         script: root.deleteTask(model.rawIndex)
@@ -690,27 +700,40 @@ PanelWindow {
                                     anchors.rightMargin: 14
                                     spacing: 10
 
-                                    // Checkbox
+                                    // Animated Bouncy Checkbox
                                     Rectangle {
+                                        id: checkBg
                                         Layout.preferredWidth: 20
                                         Layout.preferredHeight: 20
                                         radius: 6
-                                        color: model.done ? root.colSuccess : "transparent"
-                                        border.color: model.done ? root.colSuccess : root.colOutline
+                                        color: model.done ? root.colSuccess : (checkHover.hovered ? root.colSurfaceHighest : "transparent")
+                                        border.color: model.done ? root.colSuccess : (checkHover.hovered ? root.colTextVariant : root.colOutline)
                                         border.width: 1.5
+                                        scale: model.done ? 1.0 : (checkHover.hovered ? 1.1 : 1.0)
+
+                                        Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                                        Behavior on border.color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                                        Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.5 } }
 
                                         Text {
-                                            visible: model.done
                                             anchors.centerIn: parent
                                             text: "✓"
                                             font.pixelSize: 12
                                             font.bold: true
                                             color: "#162319"
+                                            opacity: model.done ? 1 : 0
+                                            scale: model.done ? 1 : 0.5
+
+                                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                                         }
-                                        MouseArea {
-                                            anchors.fill: parent
+
+                                        TapHandler {
+                                            onTapped: root.toggleTask(model.rawIndex)
+                                        }
+                                        HoverHandler {
+                                            id: checkHover
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: root.toggleTask(model.rawIndex)
                                         }
                                     }
 
@@ -719,7 +742,12 @@ PanelWindow {
                                         Layout.preferredWidth: 20
                                         Layout.preferredHeight: 20
                                         radius: 4
-                                        color: model.type === "daily" ? Qt.alpha(root.colTertiary, 0.2) : "transparent"
+                                        color: model.type === "daily" ? Qt.alpha(root.colTertiary, 0.2) : (habitHover.hovered ? root.colSurfaceHighest : "transparent")
+                                        scale: habitHover.hovered ? 1.1 : 1.0
+
+                                        Behavior on color { ColorAnimation { duration: 160 } }
+                                        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
+
                                         Text {
                                             anchors.centerIn: parent
                                             text: "↻"
@@ -727,10 +755,13 @@ PanelWindow {
                                             font.bold: true
                                             color: model.type === "daily" ? root.colTertiary : root.colOutlineVariant
                                         }
-                                        MouseArea {
-                                            anchors.fill: parent
+
+                                        TapHandler {
+                                            onTapped: root.toggleRecurring(model.rawIndex)
+                                        }
+                                        HoverHandler {
+                                            id: habitHover
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: root.toggleRecurring(model.rawIndex)
                                         }
                                     }
 
@@ -740,13 +771,17 @@ PanelWindow {
                                         text: model.text
                                         font.pixelSize: 13
                                         font.strikeout: model.done
-                                        color: model.done ? root.colOutline : root.colText
+                                        color: model.done ? root.colOutline : (titleHover.hovered ? root.colPrimary : root.colText)
                                         elide: Text.ElideRight
 
-                                        MouseArea {
-                                            anchors.fill: parent
+                                        Behavior on color { ColorAnimation { duration: 180 } }
+
+                                        TapHandler {
+                                            onTapped: root.toggleTask(model.rawIndex)
+                                        }
+                                        HoverHandler {
+                                            id: titleHover
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: root.toggleTask(model.rawIndex)
                                         }
                                     }
                                 }
@@ -806,24 +841,35 @@ PanelWindow {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
                             radius: 10
-                            color: root.nextTaskIsDaily ? root.colTertiary : (repBtnMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh)
-                            border.color: root.nextTaskIsDaily ? "transparent" : root.colOutlineVariant
+                            color: root.nextTaskIsDaily ? root.colTertiary : (repHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
+                            border.color: root.nextTaskIsDaily ? root.colTertiary : root.colOutlineVariant
                             border.width: 1
+                            scale: repHover.hovered ? 1.06 : 1.0
+
+                            Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                            Behavior on border.color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                            Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+
+                            ToolTip.visible: repHover.hovered
+                            ToolTip.text: root.nextTaskIsDaily ? "Creating Daily Habit" : "Make Daily Habit"
+                            ToolTip.delay: 300
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "↻"
+                                text: "autorenew"
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: 18
-                                font.bold: true
-                                color: root.nextTaskIsDaily ? root.colSurfaceHighest : root.colOutline
+                                color: root.nextTaskIsDaily ? "#2a1526" : (repHover.hovered ? root.colText : root.colOutline)
+                                rotation: root.nextTaskIsDaily ? 180 : 0
+                                Behavior on rotation { NumberAnimation { duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
                             }
 
-                            MouseArea {
-                                id: repBtnMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
+                            TapHandler {
+                                onTapped: root.nextTaskIsDaily = !root.nextTaskIsDaily
+                            }
+                            HoverHandler {
+                                id: repHover
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: root.nextTaskIsDaily = !root.nextTaskIsDaily
                             }
                         }
                     }
@@ -841,10 +887,10 @@ PanelWindow {
                     x: root.currentMainTab === "agenda" ? 0 : slidingContainer.width
 
                     Behavior on x {
-                        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 320; easing.type: Easing.OutQuart }
                     }
                     Behavior on opacity {
-                        NumberAnimation { duration: 180 }
+                        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
                     }
 
                     // Filter row: Today | Upcoming | All + Sync Button (Icons)
@@ -1003,6 +1049,11 @@ PanelWindow {
                                 color: eventHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh
                                 border.color: model.isToday ? root.colTertiary : root.colOutlineVariant
                                 border.width: 1
+                                scale: eventHover.hovered ? 1.008 : 1.0
+
+                                Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                                Behavior on border.color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                                Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutQuad } }
 
                                 DragHandler {
                                     id: eventDragHandler
@@ -1028,15 +1079,16 @@ PanelWindow {
                                     target: eventCard
                                     property: "x"
                                     to: 0
-                                    duration: 220
+                                    duration: 320
                                     easing.type: Easing.OutBack
+                                    easing.overshoot: 1.1
                                 }
 
                                 SequentialAnimation {
                                     id: deleteEventAnim
                                     ParallelAnimation {
-                                        NumberAnimation { target: eventCard; property: "x"; to: -eventItemWrapper.width; duration: 180; easing.type: Easing.InQuad }
-                                        NumberAnimation { target: eventCard; property: "opacity"; to: 0; duration: 180 }
+                                        NumberAnimation { target: eventCard; property: "x"; to: -eventItemWrapper.width; duration: 220; easing.type: Easing.InQuad }
+                                        NumberAnimation { target: eventCard; property: "opacity"; to: 0; duration: 200 }
                                     }
                                     ScriptAction {
                                         script: {
@@ -1219,13 +1271,21 @@ PanelWindow {
                         // Expandable Date & Time selector drawer
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: dtSelectorCol.implicitHeight + 16
-                            visible: root.dateTimeSelectorOpen
+                            Layout.preferredHeight: root.dateTimeSelectorOpen ? (dtSelectorCol.implicitHeight + 16) : 0
+                            visible: Layout.preferredHeight > 0
+                            opacity: root.dateTimeSelectorOpen ? 1.0 : 0.0
                             radius: 12
                             color: root.colSurfaceLow
                             border.color: root.colOutlineVariant
                             border.width: 1
                             clip: true
+
+                            Behavior on Layout.preferredHeight {
+                                NumberAnimation { duration: 320; easing.type: Easing.OutQuart }
+                            }
+                            Behavior on opacity {
+                                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            }
 
                             ColumnLayout {
                                 id: dtSelectorCol
@@ -1272,9 +1332,14 @@ PanelWindow {
                                             Layout.fillWidth: true
                                             Layout.preferredHeight: 26
                                             radius: 7
-                                            color: root.selectedEventDate === modelData.iso ? root.colTertiary : root.colSurfaceHigh
-                                            border.color: root.selectedEventDate === modelData.iso ? root.colTertiary : root.colOutlineVariant
+                                            color: root.selectedEventDate === modelData.iso ? root.colTertiary : (dateChipHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
+                                            border.color: root.selectedEventDate === modelData.iso ? root.colTertiary : (dateChipHover.hovered ? root.colTextVariant : root.colOutlineVariant)
                                             border.width: 1
+                                            scale: dateChipHover.hovered ? 1.05 : 1.0
+
+                                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                            Behavior on border.color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                                             Text {
                                                 anchors.centerIn: parent
@@ -1291,6 +1356,7 @@ PanelWindow {
                                                 }
                                             }
                                             HoverHandler {
+                                                id: dateChipHover
                                                 cursorShape: Qt.PointingHandCursor
                                             }
                                         }
@@ -1340,9 +1406,14 @@ PanelWindow {
                                             Layout.fillWidth: true
                                             Layout.preferredHeight: 26
                                             radius: 7
-                                            color: root.selectedEventTime === modelData ? root.colTertiary : root.colSurfaceHigh
-                                            border.color: root.selectedEventTime === modelData ? root.colTertiary : root.colOutlineVariant
+                                            color: root.selectedEventTime === modelData ? root.colTertiary : (timeChipHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
+                                            border.color: root.selectedEventTime === modelData ? root.colTertiary : (timeChipHover.hovered ? root.colTextVariant : root.colOutlineVariant)
                                             border.width: 1
+                                            scale: timeChipHover.hovered ? 1.05 : 1.0
+
+                                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                            Behavior on border.color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                                             Text {
                                                 anchors.centerIn: parent
@@ -1358,6 +1429,7 @@ PanelWindow {
                                                 }
                                             }
                                             HoverHandler {
+                                                id: timeChipHover
                                                 cursorShape: Qt.PointingHandCursor
                                             }
                                         }
