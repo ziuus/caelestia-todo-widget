@@ -27,20 +27,7 @@ PanelWindow {
 
     implicitWidth: 360
     implicitHeight: Math.min(640, mainCard.implicitHeight)
-    MouseArea {
-        anchors.fill: parent
-        propagateComposedEvents: true
-        acceptedButtons: Qt.AllButtons
-        onPressed: (mouse) => {
-            console.log("DEBUG: GLOBAL PRESSED AT x=" + mouse.x + " y=" + mouse.y)
-            mouse.accepted = false
-        }
-        onReleased: (mouse) => {
-            console.log("DEBUG: GLOBAL RELEASED AT x=" + mouse.x + " y=" + mouse.y)
-            mouse.accepted = false
-        }
-    }
- // Restore dynamic sizing!
+// Restore dynamic sizing!
 
     color: "transparent"
 
@@ -602,28 +589,7 @@ PanelWindow {
                                 anchors.rightMargin: 8
                                 spacing: 10
 
-                                // X Button on the LEFT!
-                                Rectangle {
-                                    Layout.preferredWidth: 22
-                                    Layout.preferredHeight: 22
-                                    radius: 6
-                                    color: xHandler.pressed ? root.colError : (xHover.hovered ? root.colSurfaceHighest : "transparent")
-                                    
-                                    HoverHandler { id: xHover }
-                                    TapHandler {
-                                        id: xHandler
-                                        onTapped: { console.log("DEBUG: X TAPPED!"); root.deleteTask(model.rawIndex); }
-                                    }
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "×"
-                                        font.pixelSize: 16
-                                        font.bold: true
-                                        color: xHover.hovered ? root.colError : root.colOutline
-                                    }
-                                }
-
+                                // Checkbox (Left)
                                 Rectangle {
                                     Layout.preferredWidth: 20
                                     Layout.preferredHeight: 20
@@ -642,13 +608,12 @@ PanelWindow {
                                         font.bold: true
                                         color: "#162319"
                                     }
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.toggleTask(model.rawIndex)
+                                    TapHandler {
+                                        onTapped: root.toggleTask(model.rawIndex)
                                     }
                                 }
 
+                                // Recurring indicator
                                 Rectangle {
                                     Layout.preferredWidth: 20
                                     Layout.preferredHeight: 20
@@ -663,12 +628,12 @@ PanelWindow {
                                         font.bold: true
                                         color: model.type === "daily" ? root.colTertiary : root.colOutlineVariant
                                     }
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.toggleRecurring(model.rawIndex)
+                                    TapHandler {
+                                        onTapped: root.toggleRecurring(model.rawIndex)
                                     }
                                 }
+
+                                // Task Title
                                 Text {
                                     Layout.fillWidth: true
                                     text: model.text
@@ -677,14 +642,32 @@ PanelWindow {
                                     color: model.done ? root.colOutline : root.colText
                                     elide: Text.ElideRight
 
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.toggleTask(model.rawIndex)
+                                    TapHandler {
+                                        onTapped: root.toggleTask(model.rawIndex)
                                     }
                                 }
 
+                                // Delete X Button (RIGHT)
+                                Rectangle {
+                                    Layout.preferredWidth: 22
+                                    Layout.preferredHeight: 22
+                                    radius: 6
+                                    color: xHandler.pressed ? root.colError : (xHover.hovered ? root.colSurfaceHighest : "transparent")
 
+                                    HoverHandler { id: xHover }
+                                    TapHandler {
+                                        id: xHandler
+                                        onTapped: root.deleteTask(model.rawIndex)
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "×"
+                                        font.pixelSize: 16
+                                        font.bold: true
+                                        color: xHover.hovered ? root.colError : root.colOutline
+                                    }
+                                }
                             }
                         }
                     }
@@ -709,34 +692,6 @@ PanelWindow {
                         Layout.fillWidth: true
                         spacing: 8
 
-                        // + Button on the LEFT!
-                        Rectangle {
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
-                            radius: 8
-                            color: plusHover.hovered ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
-                            
-                            HoverHandler { id: plusHover }
-                            TapHandler {
-                                id: plusHandler
-                                onTapped: {
-                                    console.log("DEBUG: + TAPPED!")
-                                    if (inputField.text.trim().length > 0) {
-                                        root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
-                                        inputField.text = ""
-                                    }
-                                }
-                            }
-                            
-                            Text {
-                                anchors.centerIn: parent
-                                text: "+"
-                                font.pixelSize: 18
-                                font.bold: true
-                                color: root.colTextOnPrimary
-                            }
-                        }
-                        
                         TextField {
                             id: inputField
                             Layout.fillWidth: true
@@ -763,13 +718,19 @@ PanelWindow {
                             }
                         }
 
+                        // Daily recurring toggle (Right side)
                         Rectangle {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
                             radius: 9
-                            color: root.nextTaskIsDaily ? root.colTertiary : (repBtnMouse.containsMouse ? root.colSurfaceHighest : "transparent")
+                            color: root.nextTaskIsDaily ? root.colTertiary : (repBtnHover.hovered ? root.colSurfaceHighest : "transparent")
                             border.color: root.nextTaskIsDaily ? "transparent" : root.colOutlineVariant
                             border.width: 1
+
+                            HoverHandler { id: repBtnHover }
+                            TapHandler {
+                                onTapped: root.nextTaskIsDaily = !root.nextTaskIsDaily
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -778,35 +739,31 @@ PanelWindow {
                                 font.bold: true
                                 color: root.nextTaskIsDaily ? root.colSurfaceHighest : root.colOutline
                             }
-                            MouseArea {
-                                id: repBtnMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.nextTaskIsDaily = !root.nextTaskIsDaily
-                            }
                         }
 
-                        Button {
+                        // + Add Button (RIGHT side) with proven TapHandler!
+                        Rectangle {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
-                            onClicked: {
-                                console.log("DEBUG: + BUTTON CLICKED! input text is: '" + inputField.text + "'")
-                                if (inputField.text.trim().length > 0) {
-                                    root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
-                                    inputField.text = ""
+                            radius: 9
+                            color: plusHover.hovered ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
+
+                            HoverHandler { id: plusHover }
+                            TapHandler {
+                                id: plusHandler
+                                onTapped: {
+                                    if (inputField.text.trim().length > 0) {
+                                        root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
+                                        inputField.text = ""
+                                    }
                                 }
                             }
-                            background: Rectangle {
-                                radius: 9
-                                color: parent.hovered ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
-                            }
-                            contentItem: Text {
+
+                            Text {
+                                anchors.centerIn: parent
                                 text: "+"
                                 font.pixelSize: 18
                                 font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
                                 color: root.nextTaskIsDaily ? "#2a1526" : root.colTextOnPrimary
                             }
                         }
@@ -1002,28 +959,26 @@ PanelWindow {
                                 // Delete option for local events
                                 Rectangle {
                                     visible: model.source === "local"
-                                    implicitWidth: 20
-                                    implicitHeight: 20
+                                    Layout.preferredWidth: 20
+                                    Layout.preferredHeight: 20
                                     width: 20
                                     height: 20
                                     radius: 6
-                                    color: evDelMouse.containsMouse ? root.colSurfaceHighest : "transparent"
+                                    color: evDelHover.hovered ? root.colSurfaceHighest : "transparent"
+
+                                    HoverHandler { id: evDelHover }
+                                    TapHandler {
+                                        onTapped: {
+                                            deleteLocalEventProc.eventId = model.eventId
+                                            deleteLocalEventProc.running = true
+                                        }
+                                    }
 
                                     Text {
                                         anchors.centerIn: parent
                                         text: "×"
                                         font.pixelSize: 15
                                         color: root.colError
-                                    }
-                                    MouseArea {
-                                        id: evDelMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
-                                            deleteLocalEventProc.eventId = model.eventId
-                                            deleteLocalEventProc.running = true
-                                        }
                                     }
                                 }
                             }
@@ -1078,7 +1033,7 @@ PanelWindow {
                             }
                             padding: 8
 
-                            onAccepted: addEventBtn.onClicked()
+                            onAccepted: addEventBtn.triggerAdd()
                         }
 
                         TextField {
@@ -1099,7 +1054,7 @@ PanelWindow {
                             }
                             padding: 6
 
-                            onAccepted: addEventBtn.onClicked()
+                            onAccepted: addEventBtn.triggerAdd()
                         }
 
                         Rectangle {
@@ -1107,10 +1062,9 @@ PanelWindow {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
                             radius: 9
-                            color: root.colTertiary
+                            color: addEvHover.hovered ? Qt.lighter(root.colTertiary, 1.1) : root.colTertiary
 
-                            signal clicked()
-                            onClicked: {
+                            function triggerAdd() {
                                 if (eventTitleInput.text.trim().length > 0) {
                                     addLocalEventProc.eventTitle = eventTitleInput.text.trim()
                                     addLocalEventProc.eventTime = eventTimeInput.text.trim() || "All Day"
@@ -1120,17 +1074,17 @@ PanelWindow {
                                 }
                             }
 
+                            HoverHandler { id: addEvHover }
+                            TapHandler {
+                                onTapped: addEventBtn.triggerAdd()
+                            }
+
                             Text {
                                 anchors.centerIn: parent
                                 text: "+"
                                 font.pixelSize: 18
                                 font.bold: true
                                 color: "#2a1526"
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: addEventBtn.clicked()
                             }
                         }
                     }
