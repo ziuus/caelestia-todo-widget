@@ -28,13 +28,6 @@ PanelWindow {
     // Dynamic height: fits whichever active tab is shown, no wasted empty space
     implicitHeight: Math.min(640, mainCard.implicitHeight)
 
-    Behavior on implicitHeight {
-        NumberAnimation {
-            duration: 220
-            easing.type: Easing.OutCubic
-        }
-    }
-
     color: "transparent"
 
     // Caelestia Theme Palette (Catppuccin Mocha Tonalspot)
@@ -420,11 +413,6 @@ PanelWindow {
                 implicitHeight: (root.currentMainTab === "tasks" ? tasksView.implicitHeight : agendaView.implicitHeight)
                 clip: true
 
-
-                Behavior on implicitHeight {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                }
-
                 // ------------------------------------------
                 // View 1: Tasks (Today / Daily)
                 // ------------------------------------------
@@ -592,10 +580,6 @@ PanelWindow {
                         spacing: 6
                         interactive: contentHeight > 320
                         model: taskModel
-
-                        Behavior on implicitHeight {
-                            NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                        }
 
                         delegate: Rectangle {
                             width: taskListView.width
@@ -867,10 +851,6 @@ PanelWindow {
                         spacing: 6
                         interactive: contentHeight > 320
                         model: agendaModel
-
-                        Behavior on implicitHeight {
-                            NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                        }
 
                         delegate: Rectangle {
                             width: agendaListView.width
