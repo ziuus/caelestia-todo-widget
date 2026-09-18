@@ -541,8 +541,8 @@ PanelWindow {
                                 spacing: 10
 
                                 Rectangle {
-                                    implicitWidth: 20
-                                    implicitHeight: 20
+                                    Layout.preferredWidth: 20
+                                    Layout.preferredHeight: 20
                                     width: 20
                                     height: 20
                                     radius: 6
@@ -566,8 +566,8 @@ PanelWindow {
                                 }
 
                                 Rectangle {
-                                    implicitWidth: 20
-                                    implicitHeight: 20
+                                    Layout.preferredWidth: 20
+                                    Layout.preferredHeight: 20
                                     width: 20
                                     height: 20
                                     radius: 4
@@ -601,8 +601,8 @@ PanelWindow {
                                 }
 
                                 Rectangle {
-                                    implicitWidth: 22
-                                    implicitHeight: 22
+                                    Layout.preferredWidth: 22
+                                    Layout.preferredHeight: 22
                                     width: 22
                                     height: 22
                                     radius: 6
@@ -673,10 +673,8 @@ PanelWindow {
                         }
 
                         Rectangle {
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            width: 36
-                            height: 36
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
                             radius: 9
                             color: root.nextTaskIsDaily ? root.colTertiary : (repBtnMouse.containsMouse ? root.colSurfaceHighest : "transparent")
                             border.color: root.nextTaskIsDaily ? "transparent" : root.colOutlineVariant
@@ -699,10 +697,8 @@ PanelWindow {
                         }
 
                         Rectangle {
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            width: 36
-                            height: 36
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
                             radius: 9
                             color: addBtnMouse.containsMouse ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
                             Text {
@@ -788,10 +784,8 @@ PanelWindow {
 
                         // Sync button (runs calendar_sync.py)
                         Rectangle {
-                            implicitWidth: 26
-                                    implicitHeight: 26
-                                    width: 26
-                                    height: 26
+                            Layout.preferredWidth: 26
+                            Layout.preferredHeight: 26
                             radius: 8
                             color: syncMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh
 
@@ -1000,10 +994,8 @@ PanelWindow {
 
                         TextField {
                             id: eventTimeInput
-                            implicitWidth: 80
-                                    implicitHeight: 36
-                                    width: 80
-                                    height: 36
+                            Layout.preferredWidth: 80
+                            Layout.preferredHeight: 36
                             placeholderText: "10:00 AM"
                             placeholderTextColor: root.colOutline
                             color: root.colText
@@ -1023,10 +1015,8 @@ PanelWindow {
 
                         Rectangle {
                             id: addEventBtn
-                            implicitWidth: 36
-                                    implicitHeight: 36
-                                    width: 36
-                                    height: 36
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
                             radius: 9
                             color: root.colTertiary
 
