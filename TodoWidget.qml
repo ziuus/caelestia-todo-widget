@@ -282,7 +282,7 @@ PanelWindow {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        implicitHeight: cardLayout.implicitHeight + 24
+        implicitHeight: cardLayout.implicitHeight + 28
 
         radius: 20
         color: root.colSurface
@@ -291,7 +291,9 @@ PanelWindow {
 
         ColumnLayout {
             id: cardLayout
-            anchors.fill: parent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: 14
             spacing: 12
 
