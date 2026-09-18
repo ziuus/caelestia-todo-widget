@@ -17,8 +17,8 @@ A highly polished, fully animated, desktop-embedded Wayland widget for tracking 
 
 ## Installation
 ```bash
-git clone https://github.com/YOUR_USERNAME/quickshell-todo-widget.git
-cd quickshell-todo-widget
+git clone https://github.com/ziuus/caelestia-todo-widget.git
+cd caelestia-todo-widget
 ./install.sh
 ```
 
