@@ -328,7 +328,8 @@ PanelWindow {
                     spacing: 0
 
                     // Tasks Tab Pill
-                    Rectangle { color: "transparent"
+                    Rectangle {
+                        color: "transparent"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
@@ -348,10 +349,8 @@ PanelWindow {
                                 color: root.currentMainTab === "tasks" ? root.colTextOnPrimary : root.colTextVariant
                             }
                             Rectangle {
-                                implicitWidth: 18
-                                    implicitHeight: 18
-                                    width: 18
-                                    height: 18
+                                width: 18
+                                height: 18
                                 radius: 9
                                 color: root.currentMainTab === "tasks" ? root.colTextOnPrimary : root.colSurfaceHigh
                                 Text {
@@ -364,15 +363,14 @@ PanelWindow {
                             }
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.currentMainTab = "tasks"
+                        TapHandler {
+                            onTapped: root.currentMainTab = "tasks"
                         }
                     }
 
                     // Agenda / Calendar Tab Pill
-                    Rectangle { color: "transparent"
+                    Rectangle {
+                        color: "transparent"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
@@ -392,10 +390,8 @@ PanelWindow {
                                 color: root.currentMainTab === "agenda" ? "#2a1526" : root.colTextVariant
                             }
                             Rectangle {
-                                implicitWidth: 18
-                                    implicitHeight: 18
-                                    width: 18
-                                    height: 18
+                                width: 18
+                                height: 18
                                 radius: 9
                                 color: root.currentMainTab === "agenda" ? "#2a1526" : root.colSurfaceHigh
                                 Text {
@@ -408,10 +404,8 @@ PanelWindow {
                             }
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
+                        TapHandler {
+                            onTapped: {
                                 root.currentMainTab = "agenda"
                                 syncCalendarProc.running = true
                             }
@@ -473,10 +467,8 @@ PanelWindow {
                                     font.weight: root.activeFilter === modelData.key ? Font.Medium : Font.Normal
                                     color: root.activeFilter === modelData.key ? root.colText : root.colOutline
                                 }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
+                                TapHandler {
+                                    onTapped: {
                                         root.activeFilter = modelData.key
                                         root.syncTaskModel()
                                     }
@@ -652,16 +644,14 @@ PanelWindow {
 
                                 RowLayout {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 10
-                                    anchors.rightMargin: 8
+                                    anchors.leftMargin: 12
+                                    anchors.rightMargin: 14
                                     spacing: 10
 
-                                    // Checkbox (Left)
+                                    // Checkbox
                                     Rectangle {
                                         Layout.preferredWidth: 20
                                         Layout.preferredHeight: 20
-                                        width: 20
-                                        height: 20
                                         radius: 6
                                         color: model.done ? root.colSuccess : "transparent"
                                         border.color: model.done ? root.colSuccess : root.colOutline
@@ -680,18 +670,16 @@ PanelWindow {
                                         }
                                     }
 
-                                    // Recurring indicator
+                                    // Daily recurring toggle badge
                                     Rectangle {
                                         Layout.preferredWidth: 20
                                         Layout.preferredHeight: 20
-                                        width: 20
-                                        height: 20
                                         radius: 4
-                                        color: "transparent"
+                                        color: model.type === "daily" ? Qt.alpha(root.colTertiary, 0.2) : "transparent"
                                         Text {
                                             anchors.centerIn: parent
                                             text: "↻"
-                                            font.pixelSize: 14
+                                            font.pixelSize: 13
                                             font.bold: true
                                             color: model.type === "daily" ? root.colTertiary : root.colOutlineVariant
                                         }
@@ -711,28 +699,6 @@ PanelWindow {
 
                                         TapHandler {
                                             onTapped: root.toggleTask(model.rawIndex)
-                                        }
-                                    }
-
-                                    // Delete X Button (RIGHT) - tap to delete as well
-                                    Rectangle {
-                                        Layout.preferredWidth: 22
-                                        Layout.preferredHeight: 22
-                                        radius: 6
-                                        color: xHandler.pressed ? root.colError : (xHover.hovered ? root.colSurfaceHighest : "transparent")
-
-                                        HoverHandler { id: xHover }
-                                        TapHandler {
-                                            id: xHandler
-                                            onTapped: root.deleteTask(model.rawIndex)
-                                        }
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "×"
-                                            font.pixelSize: 16
-                                            font.bold: true
-                                            color: xHover.hovered ? root.colError : root.colOutline
                                         }
                                     }
                                 }
@@ -755,7 +721,7 @@ PanelWindow {
                         }
                     }
 
-                    // Task Input Field
+                    // Task Input Field (Clean, Enter to add)
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 8
@@ -764,7 +730,7 @@ PanelWindow {
                             id: inputField
                             Layout.fillWidth: true
                             height: 36
-                            placeholderText: root.nextTaskIsDaily ? "Add daily habit..." : "Add task..."
+                            placeholderText: root.nextTaskIsDaily ? "Add daily habit... (Press Enter)" : "Add task... (Press Enter)"
                             placeholderTextColor: root.colOutline
                             color: root.colText
                             font.pixelSize: 12
@@ -772,11 +738,11 @@ PanelWindow {
 
                             background: Rectangle {
                                 color: root.colSurfaceHigh
-                                radius: 9
+                                radius: 10
                                 border.color: inputField.activeFocus ? (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary) : root.colOutlineVariant
                                 border.width: 1
                             }
-                            padding: 8
+                            padding: 10
 
                             onAccepted: {
                                 if (text.trim().length > 0) {
@@ -786,12 +752,12 @@ PanelWindow {
                             }
                         }
 
-                        // Daily recurring toggle (Right side)
+                        // Daily recurring toggle
                         Rectangle {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
-                            radius: 9
-                            color: root.nextTaskIsDaily ? root.colTertiary : (repBtnHover.hovered ? root.colSurfaceHighest : "transparent")
+                            radius: 10
+                            color: root.nextTaskIsDaily ? root.colTertiary : (repBtnHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
                             border.color: root.nextTaskIsDaily ? "transparent" : root.colOutlineVariant
                             border.width: 1
 
@@ -805,34 +771,7 @@ PanelWindow {
                                 text: "↻"
                                 font.pixelSize: 18
                                 font.bold: true
-                                color: root.nextTaskIsDaily ? root.colSurfaceHighest : root.colOutline
-                            }
-                        }
-
-                        // + Add Button (RIGHT side) with proven TapHandler!
-                        Rectangle {
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
-                            radius: 9
-                            color: plusHover.hovered ? Qt.lighter(root.nextTaskIsDaily ? root.colTertiary : root.colPrimary, 1.1) : (root.nextTaskIsDaily ? root.colTertiary : root.colPrimary)
-
-                            HoverHandler { id: plusHover }
-                            TapHandler {
-                                id: plusHandler
-                                onTapped: {
-                                    if (inputField.text.trim().length > 0) {
-                                        root.addTask(inputField.text.trim(), root.nextTaskIsDaily ? "daily" : "today")
-                                        inputField.text = ""
-                                    }
-                                }
-                            }
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "+"
-                                font.pixelSize: 18
-                                font.bold: true
-                                color: root.nextTaskIsDaily ? "#2a1526" : root.colTextOnPrimary
+                                color: root.nextTaskIsDaily ? root.colSurfaceHighest : (repBtnHover.hovered ? root.colText : root.colOutline)
                             }
                         }
                     }
@@ -885,10 +824,8 @@ PanelWindow {
                                         color: root.agendaFilter === modelData.key ? "#2a1526" : root.colText
                                     }
                                 }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
+                                TapHandler {
+                                    onTapped: {
                                         root.agendaFilter = modelData.key
                                         root.syncAgendaModel()
                                     }
@@ -896,12 +833,17 @@ PanelWindow {
                             }
                         }
 
-                        // Sync button (runs calendar_sync.py)
+                        // Sync button
                         Rectangle {
                             Layout.preferredWidth: 26
                             Layout.preferredHeight: 26
                             radius: 8
-                            color: syncMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh
+                            color: syncHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh
+
+                            HoverHandler { id: syncHover }
+                            TapHandler {
+                                onTapped: syncCalendarProc.running = true
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -909,13 +851,6 @@ PanelWindow {
                                 font.pixelSize: 14
                                 font.bold: true
                                 color: root.colTertiary
-                            }
-                            MouseArea {
-                                id: syncMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: syncCalendarProc.running = true
                             }
                         }
                     }
@@ -952,101 +887,146 @@ PanelWindow {
                         interactive: contentHeight > 320
                         model: agendaModel
 
-                        delegate: Rectangle {
+                        delegate: Item {
+                            id: eventItemWrapper
                             width: agendaListView.width
                             height: 48
-                            radius: 10
-                            color: root.colSurfaceHigh
-                            scale: agendaHoverArea.containsMouse ? 1.015 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                            MouseArea {
-                                id: agendaHoverArea
+                            clip: true
+
+                            // Underneath: Red Slide-to-Delete reveal for local events
+                            Rectangle {
                                 anchors.fill: parent
-                                hoverEnabled: true
-                                propagateComposedEvents: true
-                                onClicked: mouse.accepted = false
+                                radius: 10
+                                color: root.colError
+                                visible: model.source === "local"
+                                opacity: Math.min(1.0, Math.abs(eventCard.x) / 60)
+
+                                RowLayout {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 6
+
+                                    Text {
+                                        text: "delete"
+                                        font.family: "Material Symbols Rounded"
+                                        font.pixelSize: 18
+                                        color: "#2a1526"
+                                    }
+                                    Text {
+                                        text: eventCard.x < -80 ? "Release to delete" : "Slide to delete"
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: "#2a1526"
+                                    }
+                                }
                             }
-                            border.color: model.isToday ? root.colTertiary : root.colOutlineVariant
-                            border.width: 1
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 10
-                                anchors.rightMargin: 8
-                                spacing: 8
+                            // Top: Event Card
+                            Rectangle {
+                                id: eventCard
+                                width: parent.width
+                                height: parent.height
+                                radius: 10
+                                color: eventHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh
+                                border.color: model.isToday ? root.colTertiary : root.colOutlineVariant
+                                border.width: 1
 
-                                // Time pill
-                                Rectangle {
-                                    implicitWidth: 72
-                                    implicitHeight: 28
-                                    width: 72
-                                    height: 28
-                                    radius: 6
-                                    color: model.isToday ? "#382334" : root.colSurfaceLow
+                                DragHandler {
+                                    id: eventDragHandler
+                                    enabled: model.source === "local"
+                                    target: eventCard
+                                    xAxis.maximum: 0
+                                    xAxis.minimum: -eventItemWrapper.width
+                                    yAxis.enabled: false
 
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: model.time
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        color: model.isToday ? root.colTertiary : root.colTextVariant
-                                    }
-                                }
-
-                                // Event Details
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 1
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: model.title
-                                        font.pixelSize: 12
-                                        font.bold: true
-                                        color: root.colText
-                                        elide: Text.ElideRight
-                                    }
-
-                                    RowLayout {
-                                        spacing: 4
-                                        Text {
-                                            text: model.dateDisplay
-                                            font.pixelSize: 10
-                                            color: root.colOutline
-                                        }
-                                        Text {
-                                            visible: model.location.length > 0
-                                            text: "· " + model.location
-                                            font.pixelSize: 10
-                                            color: root.colPrimary
-                                            elide: Text.ElideRight
+                                    onActiveChanged: {
+                                        if (!active) {
+                                            if (eventCard.x < -80) {
+                                                deleteEventAnim.start()
+                                            } else {
+                                                snapEventAnim.start()
+                                            }
                                         }
                                     }
                                 }
 
-                                // Delete option for local events
-                                Rectangle {
-                                    visible: model.source === "local"
-                                    Layout.preferredWidth: 20
-                                    Layout.preferredHeight: 20
-                                    width: 20
-                                    height: 20
-                                    radius: 6
-                                    color: evDelHover.hovered ? root.colSurfaceHighest : "transparent"
+                                NumberAnimation {
+                                    id: snapEventAnim
+                                    target: eventCard
+                                    property: "x"
+                                    to: 0
+                                    duration: 220
+                                    easing.type: Easing.OutBack
+                                }
 
-                                    HoverHandler { id: evDelHover }
-                                    TapHandler {
-                                        onTapped: {
+                                SequentialAnimation {
+                                    id: deleteEventAnim
+                                    ParallelAnimation {
+                                        NumberAnimation { target: eventCard; property: "x"; to: -eventItemWrapper.width; duration: 180; easing.type: Easing.InQuad }
+                                        NumberAnimation { target: eventCard; property: "opacity"; to: 0; duration: 180 }
+                                    }
+                                    ScriptAction {
+                                        script: {
                                             deleteLocalEventProc.eventId = model.eventId
                                             deleteLocalEventProc.running = true
                                         }
                                     }
+                                }
 
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "×"
-                                        font.pixelSize: 15
-                                        color: root.colError
+                                HoverHandler { id: eventHover }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 10
+                                    anchors.rightMargin: 12
+                                    spacing: 10
+
+                                    // Time pill
+                                    Rectangle {
+                                        Layout.preferredWidth: 68
+                                        Layout.preferredHeight: 28
+                                        radius: 7
+                                        color: model.isToday ? "#382334" : root.colSurfaceLow
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: model.time
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                            color: model.isToday ? root.colTertiary : root.colTextVariant
+                                        }
+                                    }
+
+                                    // Event Details
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: model.title
+                                            font.pixelSize: 12
+                                            font.bold: true
+                                            color: root.colText
+                                            elide: Text.ElideRight
+                                        }
+
+                                        RowLayout {
+                                            spacing: 4
+                                            Text {
+                                                text: model.dateDisplay
+                                                font.pixelSize: 10
+                                                color: root.colOutline
+                                            }
+                                            Text {
+                                                visible: model.location.length > 0
+                                                text: "· " + model.location
+                                                font.pixelSize: 10
+                                                color: root.colPrimary
+                                                elide: Text.ElideRight
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1078,16 +1058,26 @@ PanelWindow {
                         }
                     }
 
-                    // Quick Add Event Field
+                    // Quick Add Event Field (Press Enter to Add!)
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 6
+                        spacing: 8
+
+                        function triggerAddEvent() {
+                            if (eventTitleInput.text.trim().length > 0) {
+                                addLocalEventProc.eventTitle = eventTitleInput.text.trim()
+                                addLocalEventProc.eventTime = eventTimeInput.text.trim() || "All Day"
+                                addLocalEventProc.running = true
+                                eventTitleInput.text = ""
+                                eventTimeInput.text = ""
+                            }
+                        }
 
                         TextField {
                             id: eventTitleInput
                             Layout.fillWidth: true
                             height: 36
-                            placeholderText: "New event (e.g. Team Sync)..."
+                            placeholderText: "Event title... (Press Enter)"
                             placeholderTextColor: root.colOutline
                             color: root.colText
                             font.pixelSize: 12
@@ -1095,20 +1085,20 @@ PanelWindow {
 
                             background: Rectangle {
                                 color: root.colSurfaceHigh
-                                radius: 9
+                                radius: 10
                                 border.color: eventTitleInput.activeFocus ? root.colTertiary : root.colOutlineVariant
                                 border.width: 1
                             }
-                            padding: 8
+                            padding: 10
 
-                            onAccepted: addEventBtn.triggerAdd()
+                            onAccepted: parent.triggerAddEvent()
                         }
 
                         TextField {
                             id: eventTimeInput
-                            Layout.preferredWidth: 80
+                            Layout.preferredWidth: 85
                             Layout.preferredHeight: 36
-                            placeholderText: "10:00 AM"
+                            placeholderText: "Time (opt)"
                             placeholderTextColor: root.colOutline
                             color: root.colText
                             font.pixelSize: 11
@@ -1116,44 +1106,13 @@ PanelWindow {
 
                             background: Rectangle {
                                 color: root.colSurfaceHigh
-                                radius: 9
+                                radius: 10
                                 border.color: eventTimeInput.activeFocus ? root.colTertiary : root.colOutlineVariant
                                 border.width: 1
                             }
-                            padding: 6
+                            padding: 8
 
-                            onAccepted: addEventBtn.triggerAdd()
-                        }
-
-                        Rectangle {
-                            id: addEventBtn
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
-                            radius: 9
-                            color: addEvHover.hovered ? Qt.lighter(root.colTertiary, 1.1) : root.colTertiary
-
-                            function triggerAdd() {
-                                if (eventTitleInput.text.trim().length > 0) {
-                                    addLocalEventProc.eventTitle = eventTitleInput.text.trim()
-                                    addLocalEventProc.eventTime = eventTimeInput.text.trim() || "All Day"
-                                    addLocalEventProc.running = true
-                                    eventTitleInput.text = ""
-                                    eventTimeInput.text = ""
-                                }
-                            }
-
-                            HoverHandler { id: addEvHover }
-                            TapHandler {
-                                onTapped: addEventBtn.triggerAdd()
-                            }
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "+"
-                                font.pixelSize: 18
-                                font.bold: true
-                                color: "#2a1526"
-                            }
+                            onAccepted: parent.triggerAddEvent()
                         }
                     }
                 }
