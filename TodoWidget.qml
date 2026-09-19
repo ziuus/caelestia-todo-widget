@@ -67,6 +67,24 @@ PanelWindow {
     property string selectedEventTime: "All Day"
     property bool dateTimeSelectorOpen: false
 
+    Shortcut {
+        sequence: "Shift+R"
+        enabled: root.currentMainTab === "tasks" && (!inputField.activeFocus || inputField.text.length === 0)
+        onActivated: {
+            root.nextTaskIsDaily = !root.nextTaskIsDaily
+            inputField.forceActiveFocus()
+        }
+    }
+
+    Shortcut {
+        sequence: "Ctrl+R"
+        enabled: root.currentMainTab === "tasks"
+        onActivated: {
+            root.nextTaskIsDaily = !root.nextTaskIsDaily
+            inputField.forceActiveFocus()
+        }
+    }
+
     function getTodayString() {
         var d = new Date()
         return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0')
@@ -821,16 +839,61 @@ PanelWindow {
                         }
                     }
 
-                    // Task Input Field (Clean, Enter to add)
+                    // Task Input Field (Left recurring toggle + text input)
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 36
+                        implicitHeight: 36
                         spacing: 8
+
+                        // Daily recurring toggle (Left Side)
+                        Rectangle {
+                            id: dailyToggleBtn
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
+                            implicitWidth: 36
+                            implicitHeight: 36
+                            radius: 10
+                            color: root.nextTaskIsDaily ? root.colTertiary : (repMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh)
+                            border.color: root.nextTaskIsDaily ? root.colTertiary : (repMouse.containsMouse ? root.colOutline : root.colOutlineVariant)
+                            border.width: 1
+                            scale: repMouse.pressed ? 0.93 : (repMouse.containsMouse ? 1.05 : 1.0)
+
+                            Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                            Behavior on border.color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                            Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+
+                            ToolTip.visible: repMouse.containsMouse
+                            ToolTip.text: (root.nextTaskIsDaily ? "Creating Daily Habit" : "Make Daily Habit") + " (Shift+R)"
+                            ToolTip.delay: 250
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "autorenew"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 18
+                                color: root.nextTaskIsDaily ? "#2a1526" : (repMouse.containsMouse ? root.colText : root.colOutline)
+                                rotation: root.nextTaskIsDaily ? 180 : 0
+                                Behavior on rotation { NumberAnimation { duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                            }
+
+                            MouseArea {
+                                id: repMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.nextTaskIsDaily = !root.nextTaskIsDaily
+                                    inputField.forceActiveFocus()
+                                }
+                            }
+                        }
 
                         TextField {
                             id: inputField
                             Layout.fillWidth: true
                             Layout.preferredHeight: 36
+                            implicitHeight: 36
                             placeholderText: root.nextTaskIsDaily ? "Add daily habit... (Press Enter)" : "Add task... (Press Enter)"
                             placeholderTextColor: Qt.alpha(root.colTextVariant, 0.7)
                             color: root.colText
@@ -845,48 +908,19 @@ PanelWindow {
                             }
                             padding: 10
 
+                            Keys.onPressed: function(event) {
+                                if ((event.key === Qt.Key_R && (event.modifiers & Qt.ShiftModifier) && inputField.text.length === 0) ||
+                                    (event.key === Qt.Key_R && (event.modifiers & (Qt.ControlModifier | Qt.AltModifier)))) {
+                                    root.nextTaskIsDaily = !root.nextTaskIsDaily
+                                    event.accepted = true
+                                }
+                            }
+
                             onAccepted: {
                                 if (text.trim().length > 0) {
                                     root.addTask(text.trim(), root.nextTaskIsDaily ? "daily" : "today")
                                     text = ""
                                 }
-                            }
-                        }
-
-                        // Daily recurring toggle
-                        Rectangle {
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
-                            radius: 10
-                            color: root.nextTaskIsDaily ? root.colTertiary : (repHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
-                            border.color: root.nextTaskIsDaily ? root.colTertiary : root.colOutlineVariant
-                            border.width: 1
-                            scale: repHover.hovered ? 1.06 : 1.0
-
-                            Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
-                            Behavior on border.color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
-                            Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
-
-                            ToolTip.visible: repHover.hovered
-                            ToolTip.text: root.nextTaskIsDaily ? "Creating Daily Habit" : "Make Daily Habit"
-                            ToolTip.delay: 300
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "autorenew"
-                                font.family: "Material Symbols Rounded"
-                                font.pixelSize: 18
-                                color: root.nextTaskIsDaily ? "#2a1526" : (repHover.hovered ? root.colText : root.colOutline)
-                                rotation: root.nextTaskIsDaily ? 180 : 0
-                                Behavior on rotation { NumberAnimation { duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
-                            }
-
-                            TapHandler {
-                                onTapped: root.nextTaskIsDaily = !root.nextTaskIsDaily
-                            }
-                            HoverHandler {
-                                id: repHover
-                                cursorShape: Qt.PointingHandCursor
                             }
                         }
                     }
