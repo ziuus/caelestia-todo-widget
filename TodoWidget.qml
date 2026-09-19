@@ -68,15 +68,6 @@ PanelWindow {
     property bool dateTimeSelectorOpen: false
 
     Shortcut {
-        sequence: "Shift+R"
-        enabled: root.currentMainTab === "tasks" && (!inputField.activeFocus || inputField.text.length === 0)
-        onActivated: {
-            root.nextTaskIsDaily = !root.nextTaskIsDaily
-            inputField.forceActiveFocus()
-        }
-    }
-
-    Shortcut {
         sequence: "Ctrl+R"
         enabled: root.currentMainTab === "tasks"
         onActivated: {
@@ -864,7 +855,7 @@ PanelWindow {
                             Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                             ToolTip.visible: repMouse.containsMouse
-                            ToolTip.text: (root.nextTaskIsDaily ? "Creating Daily Habit" : "Make Daily Habit") + " (Shift+R)"
+                            ToolTip.text: (root.nextTaskIsDaily ? "Creating Daily Habit" : "Make Daily Habit") + " (Ctrl+R)"
                             ToolTip.delay: 250
 
                             Text {
@@ -909,8 +900,7 @@ PanelWindow {
                             padding: 10
 
                             Keys.onPressed: function(event) {
-                                if ((event.key === Qt.Key_R && (event.modifiers & Qt.ShiftModifier) && inputField.text.length === 0) ||
-                                    (event.key === Qt.Key_R && (event.modifiers & (Qt.ControlModifier | Qt.AltModifier)))) {
+                                if (event.key === Qt.Key_R && (event.modifiers & Qt.ControlModifier)) {
                                     root.nextTaskIsDaily = !root.nextTaskIsDaily
                                     event.accepted = true
                                 }
