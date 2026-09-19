@@ -66,6 +66,8 @@ PanelWindow {
     property string selectedEventDateLabel: "Today"
     property string selectedEventTime: "All Day"
     property bool dateTimeSelectorOpen: false
+    property bool calendarSettingsOpen: false
+    property string savedIcalUrl: ""
 
     Shortcut {
         sequence: "Ctrl+R"
@@ -105,6 +107,7 @@ PanelWindow {
         onExited: {
             readProc.running = true
             syncCalendarProc.running = true
+            readCalendarConfigProc.running = true
         }
     }
 
@@ -281,6 +284,32 @@ PanelWindow {
         property int eventId: 0
         command: ["python3", "-c", "import json, os; f=os.path.expanduser('~/.local/state/calendar_local.json'); data=[x for x in json.load(open(f)) if x.get('id') != " + eventId + "] if os.path.exists(f) else []; json.dump(data, open(f, 'w'), indent=2)"]
         onExited: syncCalendarProc.running = true
+    }
+
+    Process {
+        id: readCalendarConfigProc
+        command: ["python3", "-c", "import json, os; f=os.path.expanduser('~/.local/state/calendar_config.json'); print(json.load(open(f)).get('ics_url', '').strip()) if os.path.exists(f) else print('')"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (data !== undefined && data !== null) {
+                    root.savedIcalUrl = data.trim()
+                }
+            }
+        }
+    }
+
+    Process {
+        id: saveCalendarConfigProc
+        property string icsUrl: ""
+        command: [
+            "python3", "-c",
+            "import json, os, sys; f=os.path.expanduser('~/.local/state/calendar_config.json'); os.makedirs(os.path.dirname(f), exist_ok=True); json.dump({'ics_url': sys.argv[1].strip()}, open(f, 'w'), indent=2)",
+            icsUrl
+        ]
+        onExited: {
+            root.savedIcalUrl = icsUrl.trim()
+            syncCalendarProc.running = true
+        }
     }
 
     function syncAgendaModel() {
@@ -991,13 +1020,16 @@ PanelWindow {
                             Layout.preferredWidth: 28
                             Layout.preferredHeight: 28
                             radius: 8
-                            color: syncHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh
+                            color: syncMouse.pressed ? root.colSurfaceHighest : (syncMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh)
                             border.color: root.colOutlineVariant
                             border.width: 1
+                            scale: syncMouse.pressed ? 0.93 : (syncMouse.containsMouse ? 1.05 : 1.0)
 
-                            ToolTip.visible: syncHover.hovered
+                            Behavior on scale { NumberAnimation { duration: 120 } }
+
+                            ToolTip.visible: syncMouse.containsMouse
                             ToolTip.text: "Sync Calendar"
-                            ToolTip.delay: 300
+                            ToolTip.delay: 250
 
                             Text {
                                 anchors.centerIn: parent
@@ -1007,13 +1039,246 @@ PanelWindow {
                                 color: root.colTertiary
                             }
 
-                            TapHandler {
-                                onTapped: syncCalendarProc.running = true
+                            MouseArea {
+                                id: syncMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: syncCalendarProc.running = true
+                            }
+                        }
+
+                        // Connect Google Calendar Button
+                        Rectangle {
+                            id: connectCalBtn
+                            Layout.preferredWidth: 28
+                            Layout.preferredHeight: 28
+                            radius: 8
+                            color: root.calendarSettingsOpen ? root.colTertiary : (connMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh)
+                            border.color: root.calendarSettingsOpen ? root.colTertiary : (root.savedIcalUrl.length > 0 ? root.colSuccess : root.colOutlineVariant)
+                            border.width: 1
+                            scale: connMouse.pressed ? 0.93 : (connMouse.containsMouse ? 1.05 : 1.0)
+
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                            Behavior on scale { NumberAnimation { duration: 120 } }
+
+                            ToolTip.visible: connMouse.containsMouse
+                            ToolTip.text: root.calendarSettingsOpen ? "Close Calendar Settings" : (root.savedIcalUrl.length > 0 ? "Google Calendar Connected (Click to edit)" : "Connect Google Calendar")
+                            ToolTip.delay: 250
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.savedIcalUrl.length > 0 ? "cloud_done" : "cloud_sync"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 16
+                                color: root.calendarSettingsOpen ? "#2a1526" : (root.savedIcalUrl.length > 0 ? root.colSuccess : root.colTertiary)
                             }
 
-                            HoverHandler {
-                                id: syncHover
+                            MouseArea {
+                                id: connMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.calendarSettingsOpen = !root.calendarSettingsOpen
+                                    if (root.calendarSettingsOpen) {
+                                        icalUrlInput.text = root.savedIcalUrl
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Expandable Google Calendar Connect Drawer
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: root.calendarSettingsOpen ? (calSettingsCol.implicitHeight + 16) : 0
+                        visible: Layout.preferredHeight > 0
+                        opacity: root.calendarSettingsOpen ? 1.0 : 0.0
+                        radius: 12
+                        color: root.colSurfaceLow
+                        border.color: root.savedIcalUrl.length > 0 ? root.colSuccess : root.colTertiary
+                        border.width: 1
+                        clip: true
+
+                        Behavior on Layout.preferredHeight {
+                            NumberAnimation {
+                                duration: 320
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+                            }
+                        }
+                        Behavior on opacity {
+                            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                        }
+
+                        ColumnLayout {
+                            id: calSettingsCol
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            anchors.bottomMargin: 10
+                            anchors.topMargin: root.calendarSettingsOpen ? 10 : -16
+                            spacing: 8
+
+                            Behavior on anchors.topMargin {
+                                NumberAnimation {
+                                    duration: 320
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+                                }
+                            }
+
+                            // Header row
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 6
+
+                                Text {
+                                    text: "calendar_month"
+                                    font.family: "Material Symbols Rounded"
+                                    font.pixelSize: 15
+                                    color: root.colTertiary
+                                }
+
+                                Text {
+                                    text: "Google Calendar Sync"
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: root.colText
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                Rectangle {
+                                    radius: 6
+                                    color: root.savedIcalUrl.length > 0 ? Qt.alpha(root.colSuccess, 0.2) : Qt.alpha(root.colOutline, 0.2)
+                                    implicitWidth: statusText.implicitWidth + 10
+                                    implicitHeight: 18
+
+                                    Text {
+                                        id: statusText
+                                        anchors.centerIn: parent
+                                        text: root.savedIcalUrl.length > 0 ? "Connected" : "Not Linked"
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                        color: root.savedIcalUrl.length > 0 ? root.colSuccess : root.colTextVariant
+                                    }
+                                }
+                            }
+
+                            // Instructions
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Paste Secret iCal URL (Google Calendar → Settings → Integrate calendar → Secret address in iCal format):"
+                                font.pixelSize: 9
+                                color: root.colTextVariant
+                                wrapMode: Text.Wrap
+                            }
+
+                            // URL input field
+                            TextField {
+                                id: icalUrlInput
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 32
+                                implicitHeight: 32
+                                placeholderText: "https://calendar.google.com/calendar/ical/.../basic.ics"
+                                placeholderTextColor: Qt.alpha(root.colTextVariant, 0.6)
+                                color: root.colText
+                                font.pixelSize: 11
+                                verticalAlignment: TextInput.AlignVCenter
+                                text: root.savedIcalUrl
+
+                                background: Rectangle {
+                                    color: root.colSurfaceHigh
+                                    radius: 8
+                                    border.color: icalUrlInput.activeFocus ? root.colTertiary : root.colOutlineVariant
+                                    border.width: 1
+                                }
+                                padding: 6
+
+                                onAccepted: saveActionBtn.save()
+                            }
+
+                            // Action buttons
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 6
+
+                                Rectangle {
+                                    id: saveActionBtn
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 28
+                                    implicitHeight: 28
+                                    radius: 8
+                                    color: root.colPrimary
+                                    scale: saveActMouse.pressed ? 0.95 : (saveActMouse.containsMouse ? 1.02 : 1.0)
+                                    Behavior on scale { NumberAnimation { duration: 120 } }
+
+                                    function save() {
+                                        if (icalUrlInput.text.trim().length > 0) {
+                                            saveCalendarConfigProc.icsUrl = icalUrlInput.text.trim()
+                                            saveCalendarConfigProc.running = true
+                                            root.calendarSettingsOpen = false
+                                        }
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "Connect & Sync"
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: root.colTextOnPrimary
+                                    }
+
+                                    MouseArea {
+                                        id: saveActMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: saveActionBtn.save()
+                                    }
+                                }
+
+                                // Remove / Disconnect button
+                                Rectangle {
+                                    visible: root.savedIcalUrl.length > 0
+                                    Layout.preferredWidth: 28
+                                    Layout.preferredHeight: 28
+                                    implicitHeight: 28
+                                    radius: 8
+                                    color: root.colSurfaceHigh
+                                    border.color: discMouse.containsMouse ? root.colError : root.colOutlineVariant
+                                    border.width: 1
+
+                                    ToolTip.visible: discMouse.containsMouse
+                                    ToolTip.text: "Disconnect Calendar"
+                                    ToolTip.delay: 200
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "delete"
+                                        font.family: "Material Symbols Rounded"
+                                        font.pixelSize: 15
+                                        color: discMouse.containsMouse ? root.colError : root.colTextVariant
+                                    }
+
+                                    MouseArea {
+                                        id: discMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            saveCalendarConfigProc.icsUrl = ""
+                                            saveCalendarConfigProc.running = true
+                                            icalUrlInput.text = ""
+                                            root.calendarSettingsOpen = false
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1206,12 +1471,12 @@ PanelWindow {
                     Rectangle {
                         visible: agendaModel.count === 0
                         Layout.fillWidth: true
-                        height: 40
+                        height: root.savedIcalUrl.length === 0 ? 56 : 40
                         color: "transparent"
 
                         ColumnLayout {
                             anchors.centerIn: parent
-                            spacing: 2
+                            spacing: 4
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: "No events scheduled"
@@ -1219,10 +1484,41 @@ PanelWindow {
                                 color: root.colOutline
                             }
                             Text {
+                                visible: root.savedIcalUrl.length > 0
                                 Layout.alignment: Qt.AlignHCenter
-                                text: "Add an event below or sync Google Calendar"
+                                text: "Add an event below"
                                 font.pixelSize: 10
                                 color: root.colTextVariant
+                            }
+                            Rectangle {
+                                visible: root.savedIcalUrl.length === 0 && !root.calendarSettingsOpen
+                                Layout.alignment: Qt.AlignHCenter
+                                implicitWidth: emptyConnText.implicitWidth + 16
+                                implicitHeight: 22
+                                radius: 6
+                                color: emptyConnMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh
+                                border.color: root.colTertiary
+                                border.width: 1
+
+                                Text {
+                                    id: emptyConnText
+                                    anchors.centerIn: parent
+                                    text: "＋ Connect Google Calendar"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    color: root.colTertiary
+                                }
+
+                                MouseArea {
+                                    id: emptyConnMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.calendarSettingsOpen = true
+                                        icalUrlInput.forceActiveFocus()
+                                    }
+                                }
                             }
                         }
                     }
