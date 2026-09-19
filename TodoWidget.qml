@@ -442,10 +442,9 @@ PanelWindow {
                             }
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
+                        TapHandler {
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.currentMainTab = "tasks"
+                            onTapped: root.currentMainTab = "tasks"
                         }
                     }
 
@@ -485,10 +484,9 @@ PanelWindow {
                             }
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
+                        TapHandler {
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
+                            onTapped: {
                                 root.currentMainTab = "agenda"
                                 syncCalendarProc.running = true
                             }
@@ -874,16 +872,16 @@ PanelWindow {
                             implicitWidth: 36
                             implicitHeight: 36
                             radius: 10
-                            color: root.nextTaskIsDaily ? root.colTertiary : (repMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh)
-                            border.color: root.nextTaskIsDaily ? root.colTertiary : (repMouse.containsMouse ? root.colOutline : root.colOutlineVariant)
+                            color: root.nextTaskIsDaily ? root.colTertiary : (repHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
+                            border.color: root.nextTaskIsDaily ? root.colTertiary : (repHover.hovered ? root.colOutline : root.colOutlineVariant)
                             border.width: 1
-                            scale: repMouse.pressed ? 0.93 : (repMouse.containsMouse ? 1.05 : 1.0)
+                            scale: repTap.pressed ? 0.93 : (repHover.hovered ? 1.05 : 1.0)
 
                             Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
                             Behavior on border.color { ColorAnimation { duration: 180; easing.type: Easing.OutQuad } }
                             Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
-                            ToolTip.visible: repMouse.containsMouse
+                            ToolTip.visible: repHover.hovered
                             ToolTip.text: (root.nextTaskIsDaily ? "Creating Daily Habit" : "Make Daily Habit") + " (Ctrl+R)"
                             ToolTip.delay: 250
 
@@ -892,22 +890,24 @@ PanelWindow {
                                 text: "autorenew"
                                 font.family: "Material Symbols Rounded"
                                 font.pixelSize: 18
-                                color: root.nextTaskIsDaily ? "#2a1526" : (repMouse.containsMouse ? root.colText : root.colOutline)
+                                color: root.nextTaskIsDaily ? "#2a1526" : (repHover.hovered ? root.colText : root.colOutline)
                                 rotation: root.nextTaskIsDaily ? 180 : 0
                                 Behavior on rotation { NumberAnimation { duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
                             }
 
-                            MouseArea {
-                                id: repMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
+                            TapHandler {
+                                id: repTap
+                                onTapped: {
                                     root.nextTaskIsDaily = !root.nextTaskIsDaily
                                     inputField.forceActiveFocus()
                                 }
                             }
+                            HoverHandler {
+                                id: repHover
+                                cursorShape: Qt.PointingHandCursor
+                            }
                         }
+
 
                         TextField {
                             id: inputField
@@ -1017,17 +1017,18 @@ PanelWindow {
 
                         // Sync button
                         Rectangle {
+                            id: syncBtn
                             Layout.preferredWidth: 28
                             Layout.preferredHeight: 28
                             radius: 8
-                            color: syncMouse.pressed ? root.colSurfaceHighest : (syncMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh)
+                            color: syncTap.pressed ? root.colSurfaceHighest : (syncHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
                             border.color: root.colOutlineVariant
                             border.width: 1
-                            scale: syncMouse.pressed ? 0.93 : (syncMouse.containsMouse ? 1.05 : 1.0)
+                            scale: syncTap.pressed ? 0.93 : (syncHover.hovered ? 1.05 : 1.0)
 
                             Behavior on scale { NumberAnimation { duration: 120 } }
 
-                            ToolTip.visible: syncMouse.containsMouse
+                            ToolTip.visible: syncHover.hovered
                             ToolTip.text: "Sync Calendar"
                             ToolTip.delay: 250
 
@@ -1039,14 +1040,16 @@ PanelWindow {
                                 color: root.colTertiary
                             }
 
-                            MouseArea {
-                                id: syncMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
+                            TapHandler {
+                                id: syncTap
+                                onTapped: syncCalendarProc.running = true
+                            }
+                            HoverHandler {
+                                id: syncHover
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: syncCalendarProc.running = true
                             }
                         }
+
 
                         // Connect Google Calendar Button
                         Rectangle {
@@ -1054,16 +1057,16 @@ PanelWindow {
                             Layout.preferredWidth: 28
                             Layout.preferredHeight: 28
                             radius: 8
-                            color: root.calendarSettingsOpen ? root.colTertiary : (connMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh)
+                            color: root.calendarSettingsOpen ? root.colTertiary : (connHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh)
                             border.color: root.calendarSettingsOpen ? root.colTertiary : (root.savedIcalUrl.length > 0 ? root.colSuccess : root.colOutlineVariant)
                             border.width: 1
-                            scale: connMouse.pressed ? 0.93 : (connMouse.containsMouse ? 1.05 : 1.0)
+                            scale: connTap.pressed ? 0.93 : (connHover.hovered ? 1.05 : 1.0)
 
                             Behavior on color { ColorAnimation { duration: 150 } }
                             Behavior on border.color { ColorAnimation { duration: 150 } }
                             Behavior on scale { NumberAnimation { duration: 120 } }
 
-                            ToolTip.visible: connMouse.containsMouse
+                            ToolTip.visible: connHover.hovered
                             ToolTip.text: root.calendarSettingsOpen ? "Close Calendar Settings" : (root.savedIcalUrl.length > 0 ? "Google Calendar Connected (Click to edit)" : "Connect Google Calendar")
                             ToolTip.delay: 250
 
@@ -1075,19 +1078,21 @@ PanelWindow {
                                 color: root.calendarSettingsOpen ? "#2a1526" : (root.savedIcalUrl.length > 0 ? root.colSuccess : root.colTertiary)
                             }
 
-                            MouseArea {
-                                id: connMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
+                            TapHandler {
+                                id: connTap
+                                onTapped: {
                                     root.calendarSettingsOpen = !root.calendarSettingsOpen
                                     if (root.calendarSettingsOpen) {
                                         icalUrlInput.text = root.savedIcalUrl
                                     }
                                 }
                             }
+                            HoverHandler {
+                                id: connHover
+                                cursorShape: Qt.PointingHandCursor
+                            }
                         }
+
                     }
 
                     // Expandable Google Calendar Connect Drawer
@@ -1215,7 +1220,7 @@ PanelWindow {
                                     implicitHeight: 28
                                     radius: 8
                                     color: root.colPrimary
-                                    scale: saveActMouse.pressed ? 0.95 : (saveActMouse.containsMouse ? 1.02 : 1.0)
+                                    scale: saveActTap.pressed ? 0.95 : (saveActHover.hovered ? 1.02 : 1.0)
                                     Behavior on scale { NumberAnimation { duration: 120 } }
 
                                     function save() {
@@ -1234,12 +1239,13 @@ PanelWindow {
                                         color: root.colTextOnPrimary
                                     }
 
-                                    MouseArea {
-                                        id: saveActMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
+                                    TapHandler {
+                                        id: saveActTap
+                                        onTapped: saveActionBtn.save()
+                                    }
+                                    HoverHandler {
+                                        id: saveActHover
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: saveActionBtn.save()
                                     }
                                 }
 
@@ -1251,10 +1257,10 @@ PanelWindow {
                                     implicitHeight: 28
                                     radius: 8
                                     color: root.colSurfaceHigh
-                                    border.color: discMouse.containsMouse ? root.colError : root.colOutlineVariant
+                                    border.color: discHover.hovered ? root.colError : root.colOutlineVariant
                                     border.width: 1
 
-                                    ToolTip.visible: discMouse.containsMouse
+                                    ToolTip.visible: discHover.hovered
                                     ToolTip.text: "Disconnect Calendar"
                                     ToolTip.delay: 200
 
@@ -1263,20 +1269,21 @@ PanelWindow {
                                         text: "delete"
                                         font.family: "Material Symbols Rounded"
                                         font.pixelSize: 15
-                                        color: discMouse.containsMouse ? root.colError : root.colTextVariant
+                                        color: discHover.hovered ? root.colError : root.colTextVariant
                                     }
 
-                                    MouseArea {
-                                        id: discMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
+                                    TapHandler {
+                                        id: discTap
+                                        onTapped: {
                                             saveCalendarConfigProc.icsUrl = ""
                                             saveCalendarConfigProc.running = true
                                             icalUrlInput.text = ""
                                             root.calendarSettingsOpen = false
                                         }
+                                    }
+                                    HoverHandler {
+                                        id: discHover
+                                        cursorShape: Qt.PointingHandCursor
                                     }
                                 }
                             }
@@ -1496,7 +1503,7 @@ PanelWindow {
                                 implicitWidth: emptyConnText.implicitWidth + 16
                                 implicitHeight: 22
                                 radius: 6
-                                color: emptyConnMouse.containsMouse ? root.colSurfaceHighest : root.colSurfaceHigh
+                                color: emptyConnHover.hovered ? root.colSurfaceHighest : root.colSurfaceHigh
                                 border.color: root.colTertiary
                                 border.width: 1
 
@@ -1509,15 +1516,15 @@ PanelWindow {
                                     color: root.colTertiary
                                 }
 
-                                MouseArea {
-                                    id: emptyConnMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
+                                TapHandler {
+                                    onTapped: {
                                         root.calendarSettingsOpen = true
                                         icalUrlInput.forceActiveFocus()
                                     }
+                                }
+                                HoverHandler {
+                                    id: emptyConnHover
+                                    cursorShape: Qt.PointingHandCursor
                                 }
                             }
                         }
