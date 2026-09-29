@@ -31,6 +31,8 @@ PanelWindow {
     color: "transparent"
 
     mask: Region {
+        x: mainCard.x
+        y: mainCard.y
         width: mainCard.width
         height: mainCard.height
     }
