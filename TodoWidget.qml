@@ -101,6 +101,15 @@ PanelWindow {
         return list
     }
 
+    // Midnight rollover & periodic check timer (checks every 30 seconds)
+    Timer {
+        id: dayRolloverTimer
+        interval: 30000
+        running: true
+        repeat: true
+        onTriggered: root.checkDayRollover()
+    }
+
     // --- Process Handlers for Tasks ---
     Process {
         id: initFile
@@ -122,41 +131,78 @@ PanelWindow {
                     try {
                         var parsed = JSON.parse(data)
                         var curDate = root.getTodayString()
+                        var rawList = []
+                        var fileResetDate = ""
 
                         if (Array.isArray(parsed)) {
-                            root.masterList = parsed.map(t => ({text: t.text || t, done: t.done || false, type: t.type || "today"}))
-                            root.lastResetDate = curDate
-                        } else {
-                            var m = []
-                            if (Array.isArray(parsed.today)) {
-                                m = m.concat(parsed.today.map(t => ({text: t.text, done: t.done, type: "today"})))
+                            rawList = parsed
+                            fileResetDate = ""
+                        } else if (parsed && typeof parsed === "object") {
+                            fileResetDate = parsed.lastResetDate || ""
+                            if (Array.isArray(parsed.tasks)) {
+                                rawList = parsed.tasks
+                            } else if (Array.isArray(parsed.master)) {
+                                rawList = parsed.master
+                            } else {
+                                if (Array.isArray(parsed.today)) {
+                                    rawList = rawList.concat(parsed.today.map(t => ({ text: t.text, done: t.done, type: "today", lastCompletedDate: t.lastCompletedDate || "" })))
+                                }
+                                if (Array.isArray(parsed.daily)) {
+                                    rawList = rawList.concat(parsed.daily.map(t => ({ text: t.text, done: t.done, type: "daily", lastCompletedDate: t.lastCompletedDate || "" })))
+                                }
                             }
-                            if (Array.isArray(parsed.daily)) {
-                                m = m.concat(parsed.daily.map(t => ({text: t.text, done: t.done, type: "daily"})))
-                            }
-                            root.masterList = m
-                            root.lastResetDate = parsed.lastResetDate || curDate
+                        }
 
-                            if (root.lastResetDate !== curDate) {
-                                var newList = []
-                                for (var i = 0; i < root.masterList.length; i++) {
-                                    var t = root.masterList[i]
-                                    if (t.type === "daily") {
-                                        t.done = false
-                                        newList.push(t)
-                                    } else {
-                                        if (!t.done) {
-                                            newList.push(t)
-                                        }
+                        var isDifferentDay = (fileResetDate !== "" && fileResetDate !== curDate)
+                        var isLegacyFile = (fileResetDate === "")
+                        var list = []
+
+                        for (var i = 0; i < rawList.length; i++) {
+                            var item = rawList[i]
+                            var textVal = item.text || item
+                            var typeVal = item.type || "today"
+                            var doneVal = !!item.done
+                            var lastComp = item.lastCompletedDate || ""
+
+                            if (typeVal === "daily") {
+                                if (doneVal) {
+                                    if (lastComp && lastComp !== curDate) {
+                                        doneVal = false
+                                        lastComp = ""
+                                    } else if (!lastComp && (isDifferentDay || isLegacyFile)) {
+                                        doneVal = false
+                                        lastComp = ""
                                     }
                                 }
-                                root.masterList = newList
-                                root.lastResetDate = curDate
-                                root.saveTodos()
+                                list.push({
+                                    text: textVal,
+                                    done: doneVal,
+                                    type: "daily",
+                                    lastCompletedDate: lastComp
+                                })
+                            } else {
+                                if ((isDifferentDay || isLegacyFile) && doneVal && lastComp && lastComp !== curDate) {
+                                    // prune completed one-off task from previous day
+                                } else {
+                                    list.push({
+                                        text: textVal,
+                                        done: doneVal,
+                                        type: "today",
+                                        lastCompletedDate: lastComp
+                                    })
+                                }
                             }
+                        }
+
+                        root.masterList = list
+                        root.lastResetDate = curDate
+
+                        if (isDifferentDay || isLegacyFile) {
+                            root.saveTodos()
                         }
                         root.syncTaskModel()
                     } catch (e) {
+                        console.log("Error parsing todos.json: " + e)
                         root.syncTaskModel()
                     }
                 } else {
@@ -172,12 +218,49 @@ PanelWindow {
         command: ["bash", "-c", "cat << 'EOF' > ~/.local/state/todos.json\n" + content + "\nEOF"]
     }
 
-    function saveTodos() {
-        var payload = {
-            "lastResetDate": lastResetDate || getTodayString(),
-            "master": masterList
+    function checkDayRollover() {
+        var curDate = getTodayString()
+        if (root.lastResetDate === curDate) return
+
+        console.log("[TodoWidget] Date rollover detected! " + root.lastResetDate + " -> " + curDate)
+        var changed = false
+        var newList = []
+
+        for (var i = 0; i < masterList.length; i++) {
+            var t = masterList[i]
+            if (t.type === "daily") {
+                if (t.done && t.lastCompletedDate !== curDate) {
+                    t.done = false
+                    t.lastCompletedDate = ""
+                    changed = true
+                }
+                newList.push(t)
+            } else {
+                if (t.done && root.lastResetDate && root.lastResetDate !== curDate) {
+                    changed = true
+                } else {
+                    newList.push(t)
+                }
+            }
         }
-        writeProc.content = JSON.stringify(masterList, null, 2)
+
+        root.lastResetDate = curDate
+        masterList = newList
+        saveTodos()
+        syncTaskModel()
+
+        root.selectedEventDate = curDate
+        syncCalendarProc.running = true
+    }
+
+    function saveTodos() {
+        var curDate = getTodayString()
+        root.lastResetDate = curDate
+        var payload = {
+            "lastResetDate": curDate,
+            "tasks": masterList
+        }
+        writeProc.content = JSON.stringify(payload, null, 2)
         writeProc.running = true
     }
 
@@ -203,8 +286,30 @@ PanelWindow {
 
     function toggleTask(rawIndex) {
         if (rawIndex >= 0 && rawIndex < masterList.length) {
+            var curDate = getTodayString()
             var temp = masterList
-            temp[rawIndex].done = !temp[rawIndex].done
+            var item = temp[rawIndex]
+            item.done = !item.done
+            if (item.done) {
+                item.lastCompletedDate = curDate
+            } else {
+                item.lastCompletedDate = ""
+            }
+            masterList = temp
+            saveTodos()
+            syncTaskModel()
+        }
+    }
+
+    function toggleRecurring(rawIndex) {
+        if (rawIndex >= 0 && rawIndex < masterList.length) {
+            var curDate = getTodayString()
+            var temp = masterList
+            var item = temp[rawIndex]
+            item.type = (item.type === "daily") ? "today" : "daily"
+            if (item.type === "daily" && item.done && !item.lastCompletedDate) {
+                item.lastCompletedDate = curDate
+            }
             masterList = temp
             saveTodos()
             syncTaskModel()
@@ -225,7 +330,12 @@ PanelWindow {
     function addTask(text, type) {
         console.log("addTask triggered! text: " + text + " type: " + type)
         var temp = masterList
-        temp.push({"text": text, "done": false, "type": type})
+        temp.push({
+            "text": text,
+            "done": false,
+            "type": type,
+            "lastCompletedDate": ""
+        })
         masterList = temp
         saveTodos()
         syncTaskModel()
