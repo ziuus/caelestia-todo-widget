@@ -735,9 +735,9 @@ PanelWindow {
                     ListView {
                         id: taskListView
                         Layout.fillWidth: true
-                        implicitHeight: Math.min(320, contentHeight)
+                        implicitHeight: contentHeight
                         visible: taskModel.count > 0
-                        clip: true
+                        clip: false
                         add: Transition {
                             ParallelAnimation {
                                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 350; easing.type: Easing.OutExpo }
@@ -755,7 +755,7 @@ PanelWindow {
                         }
 
                         spacing: 6
-                        interactive: contentHeight > 320
+                        interactive: false
                         model: taskModel
 
                         delegate: Item {
@@ -1401,8 +1401,8 @@ PanelWindow {
                     ListView {
                         id: agendaListView
                         Layout.fillWidth: true
-                        implicitHeight: Math.min(320, contentHeight)
-                        clip: true
+                        implicitHeight: contentHeight
+                        clip: false
                         add: Transition {
                             ParallelAnimation {
                                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 350; easing.type: Easing.OutExpo }
@@ -1420,7 +1420,7 @@ PanelWindow {
                         }
 
                         spacing: 6
-                        interactive: contentHeight > 320
+                        interactive: false
                         model: agendaModel
 
                         delegate: Item {
