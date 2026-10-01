@@ -28,7 +28,7 @@ def parse_ics_date(val):
 def fetch_ics_events(url):
     events = []
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'CaelestiaCalendar/1.0'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'QuickshellTodo/1.0'})
         with urllib.request.urlopen(req, timeout=5) as resp:
             content = resp.read().decode('utf-8', errors='ignore')
         

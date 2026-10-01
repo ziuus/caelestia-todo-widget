@@ -9,7 +9,7 @@ import Quickshell.Wayland
 PanelWindow {
     id: root
 
-    WlrLayershell.namespace: "caelestia-todo-widget"
+    WlrLayershell.namespace: "quickshell-todo"
     // Bottom layer: desktop view only (sits directly on wallpaper, behind normal windows)
     WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
@@ -37,7 +37,7 @@ PanelWindow {
         height: mainCard.height
     }
 
-    // Caelestia Theme Palette (Catppuccin Mocha Tonalspot)
+    // Theme Palette (Catppuccin Mocha Tonalspot)
     readonly property color colSurface: "#1e1d22"
     readonly property color colSurfaceLow: "#161519"
     readonly property color colSurfaceHigh: "#2a292e"

@@ -1,4 +1,4 @@
-# Quickshell Premium Todo & Calendar Widget
+# Quickshell Todo & Calendar Widget
 
 A highly polished, fully animated, desktop-embedded Wayland widget for tracking tasks and calendar events seamlessly. Built for Hyprland and Quickshell with a native Catppuccin Mocha palette.
 
@@ -15,7 +15,7 @@ A highly polished, fully animated, desktop-embedded Wayland widget for tracking 
 - **Dual Views & Icon Filters**:
   - **Tasks**: Filter by All, Active, Completed, or Daily recurring habits.
   - **Calendar**: Filter by Today, Upcoming, and All events with in-app Google Calendar sync.
-- **Emerging Adaptive Card**: Smooth Caelestia-style spline transitions when resizing or expanding, paired with Wayland `Region` click-masking so clicks through unused areas pass directly to your desktop.
+- **Emerging Adaptive Card**: Smooth fluid spline transitions when resizing or expanding, paired with Wayland `Region` click-masking so clicks through unused areas pass directly to your desktop.
 - **Wayland Native**: Runs on `WlrLayer.Bottom` directly on your desktop wallpaper behind active windows with zero-lag pointer handlers.
 - **Catppuccin Styled**: Integrated Mocha tonal palette with Material Symbols Rounded icons.
 
@@ -26,8 +26,8 @@ A highly polished, fully animated, desktop-embedded Wayland widget for tracking 
 
 ## Installation
 ```bash
-git clone https://github.com/ziuus/caelestia-todo-widget.git
-cd caelestia-todo-widget
+git clone https://github.com/ziuus/quickshell-todo.git
+cd quickshell-todo
 ./install.sh
 ```
 

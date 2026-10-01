@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Installing Quickshell Todo/Calendar Widget..."
+echo "Installing Quickshell Todo & Calendar Widget..."
 
 mkdir -p ~/.config/quickshell-todo-widget
 cp TodoWidget.qml calendar_sync.py ~/.config/quickshell-todo-widget/
