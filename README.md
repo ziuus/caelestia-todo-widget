@@ -7,12 +7,14 @@ A highly polished, fully animated, desktop-embedded Wayland widget for tracking 
 </p>
 
 ## Features
+- **Ultra-Low Resource Footprint**: True **0.0% idle CPU** and **~26 MB RAM** via Vulkan rendering (`QSG_RHI_BACKEND=vulkan`) with static idle budget.
+- **Smart Daily Habits Rollover**: Daily recurring tasks automatically reset and uncheck at midnight live without restarting the widget.
 - **Hold & Slide to Delete**: Native swipe gestures with red reveal and spring snapback animations.
-- **Keyboard Fast**: Press Enter to instantly add tasks and calendar events.
+- **Keyboard Fast**: Press `Enter` to instantly add tasks and calendar events; `Ctrl+R` shortcut for daily habits.
 - **Date & Time Picker**: Clickable trigger button opening an expandable inline drawer with upcoming date chips and time slots.
 - **Dual Views & Icon Filters**:
   - **Tasks**: Filter by All, Active, Completed, or Daily recurring habits.
-  - **Calendar**: Filter by Today, Upcoming, and All events with one-click Google Calendar sync.
+  - **Calendar**: Filter by Today, Upcoming, and All events with in-app Google Calendar sync.
 - **Emerging Adaptive Card**: Smooth Caelestia-style spline transitions when resizing or expanding, paired with Wayland `Region` click-masking so clicks through unused areas pass directly to your desktop.
 - **Wayland Native**: Runs on `WlrLayer.Bottom` directly on your desktop wallpaper behind active windows with zero-lag pointer handlers.
 - **Catppuccin Styled**: Integrated Mocha tonal palette with Material Symbols Rounded icons.
@@ -30,9 +32,9 @@ cd caelestia-todo-widget
 ```
 
 ## Usage
-Run it via the quickshell CLI:
+Run it with Vulkan hardware acceleration for minimal resource usage:
 ```bash
-qs -p ~/.config/quickshell-todo-widget/TodoWidget.qml -d
+env QSG_RHI_BACKEND=vulkan qs -p ~/.config/quickshell-todo-widget/TodoWidget.qml -d
 ```
 You can add this command to your `hyprland.conf` or window manager autostart file to launch it on boot.
 
