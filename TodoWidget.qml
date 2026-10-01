@@ -710,17 +710,6 @@ PanelWindow {
                                 font.pixelSize: 56
                                 color: root.colPrimary
                                 Layout.alignment: Qt.AlignHCenter
-                                
-                                property real floatOffset: 0
-                                NumberAnimation on floatOffset {
-                                    from: 0; to: 2 * Math.PI; duration: 3000; loops: Animation.Infinite
-                                }
-                                transform: Translate {
-                                    y: Math.sin(emptyIconTasks.floatOffset) * 6
-                                }
-                                
-                                layer.enabled: true
-                                // We don't have DropShadow imported by default so we just use the glow color
                             }
                             
                             Text {
